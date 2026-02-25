@@ -1,0 +1,53 @@
+@import "tailwindcss";
+
+:root {
+  /* Enterprise color palette - Blue/Teal primary */
+  --color-primary: #0891b2;
+  --color-primary-dark: #0e7490;
+  --color-primary-light: #ecfeff;
+  --color-accent: #06b6d4;
+  
+  /* Neutrals */
+  --background: #f8fafc;
+  --foreground: #0f172a;
+  --card-bg: #ffffff;
+  --border: #e2e8f0;
+  --muted: #64748b;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans), system-ui, -apple-system, sans-serif;
+}
+
+/* Smooth transitions for interactive elements */
+a, button {
+  transition: all 0.15s ease;
+}
+
+/* Custom scrollbar for enterprise feel */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f5f9;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}

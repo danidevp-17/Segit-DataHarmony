@@ -1,0 +1,50 @@
+[
+  {
+    "question": "What is DataHarmony Automation Hub?",
+    "answer": "DataHarmony Automation Hub is a centralized portal for managing and executing operational routines, monitoring jobs, and accessing various automation modules. It provides a unified interface for geology, geophysics, production, drilling, cartography, and data quality operations."
+  },
+  {
+    "question": "What modules are available in the portal?",
+    "answer": "The portal includes: Home (dashboard), Geology & Geophysics (routines, jobs, settings), Production, Drilling (with event unlock and user access), Cartography (projects index and cultural info), Data Quality, and Chatbot. Each module serves specific operational needs."
+  },
+  {
+    "question": "How do I run a routine?",
+    "answer": "To run a routine: 1) Navigate to the Routines page (/routines), 2) Select a routine from the catalog, 3) Fill in the required parameters, 4) Upload any required input files, 5) Click submit to start the job. You can then monitor the job progress in the Jobs section."
+  },
+  {
+    "question": "Where can I see job logs?",
+    "answer": "Job logs are available in the Jobs section. Navigate to /jobs, click on a specific job to view its details, and switch between stdout and stderr tabs. Logs auto-scroll and update in real-time while the job is running."
+  },
+  {
+    "question": "Where do I download job artifacts?",
+    "answer": "After a job completes, you can download artifacts from the job detail page. Navigate to /jobs, click on the completed job, and you'll find download links for all output files and artifacts in the job details section."
+  },
+  {
+    "question": "Where do I configure OW_HOME and workspace settings?",
+    "answer": "You can configure OW_HOME, workspace paths, and other environment variables in the Settings page. Navigate to /settings, update the values, and save your changes. These settings are used by routines when executing jobs."
+  },
+  {
+    "question": "What is the Geology & Geophysics module for?",
+    "answer": "The Geology & Geophysics module provides tools for running routines, monitoring jobs, and configuring system settings. It includes the Routines catalog, Jobs monitoring, and Settings configuration pages."
+  },
+  {
+    "question": "What are the Drilling submodules used for?",
+    "answer": "The Drilling module has two submodules: Event Unlock (/drilling/event-unlock) for managing event unlock settings, and User Access (/drilling/user-access) for managing user access permissions and controls for drilling operations."
+  },
+  {
+    "question": "What does the Cartography module contain?",
+    "answer": "The Cartography module includes the main cartography page, a Projects Index for browsing and managing cartography projects, and Cultural Info for managing cultural information and resources related to mapping operations."
+  },
+  {
+    "question": "What is the Data Quality module for?",
+    "answer": "The Data Quality module provides tools for monitoring and managing data quality across systems. It includes quality metrics, reports, and monitoring capabilities to ensure data integrity."
+  },
+  {
+    "question": "How do I check the status of a running job?",
+    "answer": "Navigate to /jobs to see all jobs. The Jobs page shows job status with badges (running, completed, failed). Click on any job to see detailed information, including real-time logs. Jobs automatically refresh every few seconds while running."
+  },
+  {
+    "question": "Can I view historical jobs?",
+    "answer": "Yes, all jobs are listed in the Jobs page (/jobs), sorted by creation date. You can view details, logs, and download artifacts for any job, whether it's currently running or completed."
+  }
+]

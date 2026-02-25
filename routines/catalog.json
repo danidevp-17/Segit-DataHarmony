@@ -1,0 +1,47 @@
+{
+    "routines": [
+      {
+        "id": "addfaultname",
+        "name": "Add Fault Name",
+        "description": "Adds fault name metadata to fault files.",
+        "script": "scripts/addfaultname.sh",
+        "params": [],
+        "fileInputs": [{ "name": "files", "label": "Fault files", "accept": "*/*", "multiple": true }]
+      },
+      {
+        "id": "load_pts2grid",
+        "name": "Pointset to Grid (BatchImport)",
+        "description": "Runs OW BatchImport using a grid list.",
+        "script": "scripts/load_pts2grid.sh",
+        "params": [
+          { "key": "DIST", "label": "District", "required": true },
+          { "key": "PD_OW", "label": "Project Data", "required": true },
+          { "key": "IP_OW", "label": "Interpretation", "required": true },
+          { "key": "INTERP_ID", "label": "Interp ID", "required": true }
+        ],
+        "fileInputs": [{ "name": "gridlist", "label": "gridlist.csv", "accept": ".csv", "multiple": false }]
+      },
+      {
+        "id": "grav_batch",
+        "name": "Gravity Batch Loader",
+        "description": "Preprocess + imports gravity pointsets (POS/NEG).",
+        "script": "scripts/grav_batch3.sh",
+        "params": [
+          { "key": "DIST", "label": "District", "required": true },
+          { "key": "PD_OW", "label": "Project Data", "required": true },
+          { "key": "IP_OW", "label": "Interpretation", "required": true },
+          { "key": "INTERP_ID", "label": "Interp ID", "required": true },
+          { "key": "PTS_NAME", "label": "Pointset Name", "required": true }
+        ],
+        "fileInputs": [{ "name": "files", "label": "Gravity txt files", "accept": ".txt", "multiple": true }]
+      },
+      {
+        "id": "renfiles2",
+        "name": "Rename Files (Regex)",
+        "description": "Renames files using regex rules.",
+        "script": "scripts/renfiles2.sh",
+        "params": [],
+        "fileInputs": [{ "name": "files", "label": "Files to rename", "accept": ".tif,.tiff", "multiple": true }]
+      }
+    ]
+  }
