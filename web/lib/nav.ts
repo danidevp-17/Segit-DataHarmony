@@ -10,6 +10,7 @@ import {
   ShieldCheck,
   Layers,
   Shield,
+  HardDrive,
   type LucideIcon,
 } from "lucide-react";
 
@@ -72,6 +73,11 @@ export const navigation: (NavItem | NavGroup)[] = [
     icon: ShieldCheck,
     children: [
       { label: "Data Quality", href: "/data-quality", icon: ShieldCheck },
+      {
+        label: "Monitor de Almacenamiento",
+        href: "/tools/disk-monitor",
+        icon: HardDrive,
+      },
     ],
   },
   {
