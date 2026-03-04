@@ -14,6 +14,12 @@ import {
 import BackButton from "@/components/BackButton";
 import type { DatasourceType } from "@/lib/admin/datasources";
 
+const DEFAULT_PORTS: Record<DatasourceType, number> = {
+  postgres: 5432,
+  sqlserver: 1433,
+  oracle: 1521,
+};
+
 interface Datasource {
   id: string;
   name: string;
@@ -44,6 +50,7 @@ export default function DatasourcesPage() {
     port: 5432,
     database: "",
     serviceName: "",
+    sqlServerEncrypt: true,
     username: "",
     password: "",
   });
@@ -81,6 +88,7 @@ export default function DatasourcesPage() {
       port: 5432,
       database: "",
       serviceName: "",
+      sqlServerEncrypt: true,
       username: "",
       password: "",
     });
@@ -97,6 +105,7 @@ export default function DatasourcesPage() {
       port: ds.port,
       database: ds.database || "",
       serviceName: ds.serviceName || "",
+      sqlServerEncrypt: ds.options?.encrypt !== false,
       username: ds.username,
       password: "", // Don't populate password
     });
@@ -106,12 +115,16 @@ export default function DatasourcesPage() {
 
   // Reset test status when relevant fields change
   const handleFormChange = (updates: Partial<typeof formData>) => {
+    // When type changes, set port to default for that DB
+    if ("type" in updates && updates.type) {
+      updates = { ...updates, port: DEFAULT_PORTS[updates.type] };
+    }
     const newFormData = { ...formData, ...updates };
     setFormData(newFormData);
     
     // Reset test status if connection-related fields changed
     if (testStatus.state === "ok" || testStatus.state === "failed") {
-      const relevantFields = ["type", "host", "port", "database", "serviceName", "username", "password"];
+      const relevantFields = ["type", "host", "port", "database", "serviceName", "sqlServerEncrypt", "username", "password"];
       const changedRelevantField = Object.keys(updates).some(key => relevantFields.includes(key));
       if (changedRelevantField) {
         setTestStatus({ state: "not_tested", message: "" });
@@ -159,6 +172,10 @@ export default function DatasourcesPage() {
           serviceName: formData.serviceName,
           username: formData.username,
           password: formData.password,
+          options:
+            formData.type === "sqlserver"
+              ? { encrypt: formData.sqlServerEncrypt }
+              : {},
         }),
       });
 
@@ -278,10 +295,23 @@ export default function DatasourcesPage() {
     const method = editingId ? "PUT" : "POST";
 
     try {
+      const payload: Record<string, unknown> = {
+        name: formData.name,
+        type: formData.type,
+        host: formData.host,
+        port: formData.port,
+        database: formData.database,
+        serviceName: formData.serviceName,
+        username: formData.username,
+        password: formData.password,
+      };
+      if (formData.type === "sqlserver") {
+        payload.options = { encrypt: formData.sqlServerEncrypt };
+      }
       const res = await fetch(url, {
         method,
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formData),
+        body: JSON.stringify(payload),
       });
 
       if (res.ok) {
@@ -589,6 +619,26 @@ export default function DatasourcesPage() {
                     }
                     className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-cyan-500 focus:outline-none focus:ring-1 focus:ring-cyan-500"
                   />
+                </div>
+              )}
+
+              {formData.type === "sqlserver" && (
+                <div className="flex items-center gap-2">
+                  <input
+                    type="checkbox"
+                    id="sqlServerEncrypt"
+                    checked={formData.sqlServerEncrypt}
+                    onChange={(e) =>
+                      handleFormChange({ sqlServerEncrypt: e.target.checked })
+                    }
+                    className="rounded border-slate-300 text-cyan-600 focus:ring-cyan-500"
+                  />
+                  <label
+                    htmlFor="sqlServerEncrypt"
+                    className="text-sm text-slate-700 cursor-pointer"
+                  >
+                    Usar cifrado TLS (requerido por Azure SQL y la mayoría de servidores)
+                  </label>
                 </div>
               )}
 
