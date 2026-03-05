@@ -1,118 +1,204 @@
 # Database Drivers Setup Guide
 
-This application requires database drivers to be installed for datasource connection testing and validation.
+This application supports connections to **PostgreSQL**, **SQL Server / Azure SQL**, and **Oracle 19+**. The Node.js drivers must be installed for connection validation and testing to work properly.
 
 ## Required Drivers
 
-The following Node.js packages must be installed:
-
-- **PostgreSQL**: `pg`
-- **SQL Server / Azure SQL**: `mssql`
-- **Oracle 19+**: `oracledb`
+| Database                 | npm Package  | Default Port |
+|--------------------------|--------------|--------------|
+| PostgreSQL               | `pg`         | 5432         |
+| SQL Server / Azure SQL   | `mssql`      | 1433         |
+| Oracle 19+               | `oracledb`   | 1521         |
 
 ## Installation
-
-### Standard Installation
 
 ```bash
 cd web
 npm install pg mssql oracledb
 ```
 
-### If You Encounter Certificate Issues
+The drivers are already listed in `package.json`, so `npm install` will install them automatically.
 
-If you see `SELF_SIGNED_CERT_IN_CHAIN` errors, you may need to:
+### Corporate Certificate Issues
 
-1. Configure npm to use your corporate certificate:
-   ```bash
-   npm config set cafile /path/to/corporate-cert.pem
-   ```
+If you see `SELF_SIGNED_CERT_IN_CHAIN` errors during installation:
 
-2. Or disable strict SSL (not recommended for production):
-   ```bash
-   npm config set strict-ssl false
-   ```
+```bash
+# Option 1: Corporate certificate
+npm config set cafile /path/to/corporate-cert.pem
 
-3. Or use a corporate npm registry:
-   ```bash
-   npm config set registry https://your-corporate-npm-registry.com
-   ```
+# Option 2: Disable strict SSL (not recommended for production)
+npm config set strict-ssl false
 
-## Oracle Instant Client Setup
+# Option 3: Corporate npm registry
+npm config set registry https://your-corporate-npm-registry.com
+```
 
-If you plan to use Oracle databases, you **must** also install Oracle Instant Client 19+ on the host system.
+## Technical Architecture
 
-### Linux / WSL
+### Driver Loading
 
-1. Download Oracle Instant Client 19+ from Oracle's website
-2. Extract to `/opt/oracle/instantclient_19_21` (or your preferred location)
-3. Set environment variable:
-   ```bash
-   export LD_LIBRARY_PATH=/opt/oracle/instantclient_19_21:$LD_LIBRARY_PATH
-   ```
-4. Add to your shell profile (`~/.bashrc` or `~/.zshrc`) to make it permanent
+Drivers are loaded using `createRequire` from the project root (`web/lib/admin/db-require.ts`), avoiding Turbopack/Next.js resolution issues with dynamic `require()`.
 
-### Windows
+### Next.js Configuration
 
-1. Download Oracle Instant Client 19+ from Oracle's website
-2. Extract to `C:\oracle\instantclient_19_21` (or your preferred location)
-3. Add to system PATH:
-   - Open System Properties → Environment Variables
-   - Add `C:\oracle\instantclient_19_21` to PATH
-   - Or set in PowerShell:
-     ```powershell
-     $env:PATH = "C:\oracle\instantclient_19_21;$env:PATH"
-     ```
+In `next.config.ts`, packages are declared as server externals so Node.js loads them natively:
 
-## Verification
+```ts
+serverExternalPackages: ["pg", "mssql", "oracledb"]
+```
 
-After installation, restart your Next.js server. The application will automatically validate driver availability on startup.
+### Connection Storage
 
-You should see one of these messages in the console:
+Connections created from the UI are stored in:
 
-- ✅ **Success**: `✓ All database drivers are available`
-- ⚠️ **Warning**: `⚠️  DATABASE DRIVERS MISSING:` (with details)
+| Data           | File                        |
+|----------------|-----------------------------|
+| Configuration  | `web/data/datasources.json` |
+| Passwords      | `web/data/secrets.json`     |
 
-## Driver Validation
+Passwords are stored separately under references like `ds_<id>_password`.
 
-The application validates drivers on server startup. If a driver is missing:
+## Startup Validation
 
-1. The server will log a clear error message
-2. Connection tests for that database type will fail with a helpful error
-3. The error message will include installation instructions
+When the server starts, the application automatically validates that all drivers are available. You will see one of these messages in the console:
 
-## Testing
+- `✓ All database drivers are available` — everything is working
+- `⚠️ DATABASE DRIVERS MISSING:` — lists which drivers are missing and how to install them
 
-Once drivers are installed, you can test datasource connections in the Admin → Datasources UI:
+## Configuration by Database Type
 
-1. Fill in the datasource configuration
-2. Click "Test Connection"
-3. The system will perform a real database connection test using the appropriate driver
-4. You'll see clear success or error messages
+### PostgreSQL
+
+No additional configuration required. Connects directly using the `pg` driver.
+
+**Required fields:** Host, Port (5432), Database, Username, Password.
+
+### SQL Server / Azure SQL
+
+The connection uses TLS encryption (`encrypt: true`) by default, as required by Azure SQL and most modern servers.
+
+**Required fields:** Host, Port (1433), Database, Username, Password.
+
+**UI option:** "Use TLS encryption" checkbox (enabled by default). Disable it only if your server does not require encryption (e.g., local development environments).
+
+The `trustServerCertificate` option is enabled to allow self-signed certificates.
+
+### Oracle 19+
+
+Oracle uses `oracledb` v6+ which runs in **Thin mode** by default (direct connection without Oracle Instant Client).
+
+**Required fields:** Host, Port (1521), Service Name, Username, Password.
+
+#### Error NJS-116: 10G Password Verifier Not Supported
+
+If you see this error when connecting:
+
+> NJS-116: password verifier type 0x939 is not supported by node-oracledb in Thin mode
+
+This means the Oracle user has a legacy 10G password verifier that Thin mode does not support. There are two solutions:
+
+**Solution 1** — Reset the password (recommended, no extra installation needed):
+
+```sql
+ALTER USER your_user IDENTIFIED BY new_password;
+```
+
+This generates an 11G+ verifier compatible with Thin mode.
+
+**Solution 2** — Use Thick mode (requires Oracle Instant Client):
+
+1. Download and install [Oracle Instant Client 19+](https://www.oracle.com/database/technologies/instant-client.html) (Basic or Basic Light package).
+2. Create the file `web/.env.local` with the following variables:
+
+```
+ORACLE_USE_THICK_MODE=true
+ORACLE_CLIENT_LIB_DIR=C:\oracle\instantclient_19_21
+```
+
+> Replace the path with the actual location of Oracle Instant Client (where `oci.dll` is on Windows or `libclntsh.so` on Linux).
+
+3. Restart Next.js (`npm run dev`).
+
+**Important:** Next.js loads `.env.local` automatically on startup. This method is more reliable than setting system environment variables, since Windows environment variables may not propagate to the Node.js process (especially if they were set after opening the terminal or Cursor).
+
+#### Thick Mode Configuration by Platform
+
+**Windows:**
+```
+ORACLE_USE_THICK_MODE=true
+ORACLE_CLIENT_LIB_DIR=C:\oracle\instantclient_19_21
+```
+
+**Linux / WSL:**
+```
+ORACLE_USE_THICK_MODE=true
+ORACLE_CLIENT_LIB_DIR=/opt/oracle/instantclient_19_21
+```
+
+On Linux, you can also set `LD_LIBRARY_PATH` before starting Node.js instead of using `ORACLE_CLIENT_LIB_DIR`.
+
+**macOS:**
+```
+ORACLE_USE_THICK_MODE=true
+ORACLE_CLIENT_LIB_DIR=/opt/oracle/instantclient_23_3
+```
+
+## Connection Testing from the UI
+
+In **Admin → Datasources**:
+
+1. Click **New Datasource**.
+2. Select the database type (the port changes automatically to the default value).
+3. Fill in the connection fields.
+4. Click **Test Connection** to validate.
+5. If the test is successful, click **Create** to save.
+
+For existing datasources, use the play button in the table to re-test the connection.
 
 ## Troubleshooting
 
-### "Cannot find module 'pg'" (or mssql/oracledb)
+### "Cannot find module 'pg'" (or mssql / oracledb)
 
-**Solution**: Run `npm install pg mssql oracledb` in the `web/` directory
+**Solution:** Run `npm install` in the `web/` directory.
+
+### "DATABASE DRIVERS MISSING" on startup
+
+**Cause:** Turbopack was using dynamic `require()` which could not resolve the modules. The current solution uses `createRequire` with static paths per driver.
+
+**Solution:** Verify the packages are installed by running `npm ls pg mssql oracledb` in `web/`.
+
+### SQL Server: "Server requires encryption"
+
+**Solution:** Enable the "Use TLS encryption" checkbox in the connection form (it is enabled by default).
+
+### Oracle: "NJS-116: password verifier type 0x939 is not supported"
+
+**Solution:** See the "Error NJS-116" section above. Either reset the user password or enable Thick mode.
+
+### Oracle: "DPI-1047: Cannot locate Oracle Client library"
+
+**Solution:** Thick mode was enabled but Oracle Instant Client was not found. Verify:
+- That Oracle Instant Client 19+ is installed and extracted.
+- That `ORACLE_CLIENT_LIB_DIR` in `.env.local` points to the correct directory (where `oci.dll` / `libclntsh.so` is located).
 
 ### Oracle: "NJS-047: cannot load a node-oracledb binary"
 
-**Solution**: 
-- Ensure Oracle Instant Client 19+ is installed
-- Verify `LD_LIBRARY_PATH` (Linux) or `PATH` (Windows) includes the Instant Client directory
-- Restart the Node.js server after setting environment variables
+**Solution:**
+- Verify that Oracle Instant Client 19+ is installed.
+- On Linux, verify that `LD_LIBRARY_PATH` includes the Instant Client directory.
+- Restart the server after setting environment variables.
 
-### Connection tests fail with timeout
+### Connection Test Timeout
 
-**Possible causes**:
-- Database server is not running
-- Firewall blocking the connection
-- Incorrect host/port
-- Network connectivity issues
+**Possible causes:**
+- The database server is not running.
+- A firewall is blocking the connection.
+- Incorrect host or port.
+- Network connectivity issues.
 
-Check the error message for specific details.
+The default timeout is 5 seconds for all database types.
 
-### Certificate errors during npm install
+### Certificate Errors During npm install
 
-**Solution**: Configure npm to use your corporate certificate or registry (see "If You Encounter Certificate Issues" above)
+**Solution:** Configure npm to use your corporate certificate or registry (see "Corporate Certificate Issues" above).

@@ -1,9 +1,23 @@
+import { createRequire } from "node:module";
+import path from "node:path";
+
 /**
- * Dynamic require for DB drivers so the bundler does not resolve them at build time.
- * This allows the app to build when pg/mssql/oracledb are not installed;
- * at runtime, missing drivers are reported via validateDrivers / requireDriver.
+ * Require for DB drivers. Uses createRequire to resolve from project root,
+ * bypassing Turbopack/Next.js resolution quirks when require() fails in the bundle.
  */
+const requireFromProject = createRequire(
+  path.join(process.cwd(), "package.json")
+);
+
 export function loadDriverModule(moduleName: string): unknown {
-  // eslint-disable-next-line @typescript-eslint/no-require-imports
-  return require(moduleName);
+  switch (moduleName) {
+    case "pg":
+      return requireFromProject("pg");
+    case "mssql":
+      return requireFromProject("mssql");
+    case "oracledb":
+      return requireFromProject("oracledb");
+    default:
+      throw new Error(`Unknown driver module: ${moduleName}`);
+  }
 }

@@ -1,5 +1,6 @@
 // Real database connection testing using installed drivers
 import { requireDriver } from "./db-drivers";
+import { initOracleClientIfNeeded } from "./db-oracle-thick";
 import { loadDriverModule } from "./db-require";
 // Import to trigger driver validation on server startup
 import "./db-drivers-init";
@@ -105,7 +106,7 @@ async function testSQLServer(payload: TestPayload): Promise<TestResult> {
     user: payload.username,
     password: payload.password,
     options: {
-      encrypt: false,
+      encrypt: true,
       trustServerCertificate: true,
       connectTimeout: 5000,
       ...payload.options,
@@ -174,9 +175,11 @@ async function testSQLServer(payload: TestPayload): Promise<TestResult> {
 async function testOracle(payload: TestPayload): Promise<TestResult> {
   requireDriver("oracle");
   const oracledb = loadDriverModule("oracledb") as {
+    initOracleClient?: (opts?: { libDir?: string }) => void;
     getConnection: (options: any) => Promise<any>;
   };
-  
+  initOracleClientIfNeeded(oracledb);
+
   const connectString = payload.serviceName
     ? `${payload.host}:${payload.port}/${payload.serviceName}`
     : `${payload.host}:${payload.port}`;
@@ -240,6 +243,19 @@ async function testOracle(payload: TestPayload): Promise<TestResult> {
       message = "DNS resolution failed";
       details = `Cannot resolve hostname "${payload.host}". Check the hostname.`;
       errorCode = "DNS_ERROR";
+    } else if (error.message?.includes("NJS-116") || error.message?.includes("password verifier") || error.message?.includes("0x939")) {
+      message = "Password verifier 10G no soportado";
+      details =
+        "El usuario Oracle usa un verificador de contraseña 10G legacy. Thin mode no lo soporta. " +
+        "Solución 1: Pide a tu DBA que resetee la contraseña: ALTER USER usuario IDENTIFIED BY nueva_contraseña; " +
+        "Solución 2: Usa Thick mode: instala Oracle Instant Client 19+, define ORACLE_CLIENT_LIB_DIR y ORACLE_USE_THICK_MODE=true. Ver DATABASE_DRIVERS_SETUP.md.";
+      errorCode = "AUTH_ERROR";
+    } else if (error.message?.includes("DPI-1047") || error.message?.includes("Oracle Instant Client not found")) {
+      message = "Oracle Instant Client no encontrado";
+      details =
+        error.message ||
+        "Instala Oracle Instant Client 19+ y define ORACLE_CLIENT_LIB_DIR. Ver DATABASE_DRIVERS_SETUP.md.";
+      errorCode = "DRIVER_ERROR";
     } else if (error.message?.includes("ORA-") || error.message?.includes("TNS:")) {
       // Oracle-specific error codes
       message = "Oracle connection error";

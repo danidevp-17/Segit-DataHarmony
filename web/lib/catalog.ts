@@ -34,7 +34,9 @@ const CATALOG_PATH = path.join(process.cwd(), "data", "catalog.json");
 export async function loadCatalog(): Promise<Routine[]> {
   try {
     const raw = await fs.readFile(CATALOG_PATH, "utf-8");
-    const data: Catalog = JSON.parse(raw);
+    const trimmed = raw.trim();
+    if (!trimmed) return [];
+    const data: Catalog = JSON.parse(trimmed);
     return data.routines ?? [];
   } catch (err) {
     console.error("Failed to load catalog.json at:", CATALOG_PATH, err);
