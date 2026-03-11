@@ -20,4 +20,4 @@ loguru>=0.7.2
 # Utilidades
 python-multipart>=0.0.6
 httpx>=0.26.0
-python-jose[cryptography]>=3.3.0
+PyJWT[crypto]>=2.8.0

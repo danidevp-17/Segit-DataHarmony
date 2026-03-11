@@ -31,6 +31,11 @@ class Settings(BaseSettings):
     # CORS
     cors_origins: str = "http://localhost:3000"
 
+    # Auth - Azure AD / Microsoft Entra ID
+    azure_tenant_id: str = ""
+    azure_client_id: str = ""
+    auth_skip_validation: bool = False  # Solo para desarrollo local sin Azure configurado
+
     @property
     def cors_origins_list(self) -> list[str]:
         return [o.strip() for o in self.cors_origins.split(",") if o.strip()]
