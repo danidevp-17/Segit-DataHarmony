@@ -26,3 +26,7 @@ cryptography>=42.0.0
 # Connectors data_sources
 oracledb>=2.0.0
 pyodbc>=5.0.0
+
+# Data Quality - preview
+openpyxl>=3.1.0
+mammoth>=1.6.0

@@ -39,6 +39,9 @@ class Settings(BaseSettings):
     # Cifrado de credenciales (data_sources)
     encryption_key: str = ""
 
+    # Data Quality - almacenamiento de archivos
+    dq_uploads_path: str = "./data/uploads/data-quality"
+
     @property
     def cors_origins_list(self) -> list[str]:
         return [o.strip() for o in self.cors_origins.split(",") if o.strip()]
