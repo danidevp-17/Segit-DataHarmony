@@ -12,10 +12,12 @@ from core.middleware import CorrelationIDMiddleware
 from core.database import engine
 from shared.base_model import Base
 from modules.registry.router import router as registry_router
+from modules.data_sources.router import router as data_sources_router
 
 # Importar modelos para que Alembic los detecte
 from modules.registry.models import AppModule, AppSection
 from modules.jobs.models import Job
+from modules.data_sources.models import DataSource
 
 
 @asynccontextmanager
@@ -43,6 +45,7 @@ app.add_middleware(
 )
 
 app.include_router(registry_router, prefix="/api/v1")
+app.include_router(data_sources_router, prefix="/api/v1")
 
 
 @app.get("/health")
