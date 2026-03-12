@@ -14,6 +14,15 @@ class JobCreate(BaseModel):
     datasourceId: str | None = None
 
 
+class JobLogsResponse(BaseModel):
+    stdout: str = ""
+    stderr: str = ""
+
+
+class JobArtifactsResponse(BaseModel):
+    artifacts: list[dict[str, str]]
+
+
 class JobResponse(BaseModel):
     id: UUID
     task_id: str | None
@@ -23,6 +32,7 @@ class JobResponse(BaseModel):
     payload: dict | None
     result: dict | None
     error: str | None
+    artifacts: list | None = None
     started_at: datetime | None
     finished_at: datetime | None
     created_at: datetime
