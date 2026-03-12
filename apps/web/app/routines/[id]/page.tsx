@@ -3,8 +3,8 @@
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
+import { useSession } from "next-auth/react";
 import {
-  ArrowLeft,
   Play,
   Loader2,
   AlertCircle,
@@ -16,6 +16,8 @@ import {
   Database,
 } from "lucide-react";
 import BackButton from "@/components/BackButton";
+import { getRoutine, getRoutineDatasources } from "@/lib/api/routines";
+import { createJob } from "@/lib/api/jobs";
 
 interface Param {
   key: string;
@@ -32,6 +34,7 @@ interface FileInput {
 
 interface Routine {
   id: string;
+  slug: string;
   name: string;
   description: string;
   script: string;
@@ -49,7 +52,11 @@ interface Datasource {
 export default function RoutineDetailPage() {
   const params = useParams();
   const router = useRouter();
-  const routineId = params.id as string;
+  const { data: session } = useSession();
+  const accessToken = (session as { accessToken?: string } | null)?.accessToken ?? null;
+  const apiOptions = { accessToken };
+
+  const routineIdOrSlug = params.id as string;
 
   const [routine, setRoutine] = useState<Routine | null>(null);
   const [loading, setLoading] = useState(true);
@@ -65,25 +72,23 @@ export default function RoutineDetailPage() {
   useEffect(() => {
     async function fetchRoutine() {
       try {
-        const res = await fetch(`/api/routines/${routineId}`);
-        if (!res.ok) throw new Error("Not found");
-        const data = await res.json();
+        const data = await getRoutine(routineIdOrSlug, apiOptions);
         setRoutine(data);
         const initial: Record<string, string> = {};
         data.params?.forEach((p: Param) => {
           initial[p.key] = "";
         });
         setFormValues(initial);
-        
-        // Load datasources if routine needs one
+
         if (data.needsDatasource) {
           setLoadingDatasources(true);
           try {
-            const dsRes = await fetch(`/api/routines/${routineId}/datasources?moduleId=geology_geophysics`);
-            if (dsRes.ok) {
-              const dsData = await dsRes.json();
-              setDatasources(dsData);
-            }
+            const dsData = await getRoutineDatasources(
+              routineIdOrSlug,
+              "geology_geophysics",
+              apiOptions
+            );
+            setDatasources(dsData);
           } catch (error) {
             console.error("Failed to load datasources:", error);
           } finally {
@@ -97,7 +102,7 @@ export default function RoutineDetailPage() {
       }
     }
     fetchRoutine();
-  }, [routineId]);
+  }, [routineIdOrSlug, accessToken]);
 
   const handleInputChange = (key: string, value: string) => {
     setFormValues((prev) => ({ ...prev, [key]: value }));
@@ -143,17 +148,12 @@ export default function RoutineDetailPage() {
 
     try {
       const formData = new FormData();
-      formData.append("routineId", routine.id);
+      formData.append("routineId", routine.slug ?? routine.id);
       formData.append("params", JSON.stringify(formValues));
-      
-      // Add module context (routines are accessed from geology_geophysics module)
       formData.append("moduleId", "geology_geophysics");
-      
-      // Add datasourceId if selected
       if (routine.needsDatasource && selectedDatasourceId) {
         formData.append("datasourceId", selectedDatasourceId);
       }
-
       for (const fi of routine.fileInputs) {
         const fileList = files[fi.name];
         if (fileList) {
@@ -163,17 +163,7 @@ export default function RoutineDetailPage() {
         }
       }
 
-      const res = await fetch("/api/jobs", {
-        method: "POST",
-        body: formData,
-      });
-
-      const data = await res.json();
-
-      if (!res.ok) {
-        throw new Error(data.error || "Failed to submit job");
-      }
-
+      const data = await createJob(formData, apiOptions);
       router.push(`/jobs/${data.id}`);
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : "Unknown error";
