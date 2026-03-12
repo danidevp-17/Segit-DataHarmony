@@ -1,68 +1,83 @@
+/**
+ * Proxy a FastAPI /api/v1/access-policies
+ */
 import { NextRequest, NextResponse } from "next/server";
-import { loadPolicies, savePolicies, type PoliciesData } from "@/lib/admin/policies";
+import { auth } from "@/auth";
+
+const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+
+export const dynamic = "force-dynamic";
 
 export async function GET() {
-  try {
-    const policies = await loadPolicies();
-    return NextResponse.json(policies);
-  } catch (error) {
-    console.error("Failed to load policies:", error);
+  const session = await auth();
+  const token = (session as { accessToken?: string } | null)?.accessToken;
+  const headers: Record<string, string> = {};
+  if (token) headers["Authorization"] = `Bearer ${token}`;
+
+  const res = await fetch(`${API_BASE}/api/v1/access-policies`, { headers });
+  if (!res.ok) {
+    const text = await res.text();
     return NextResponse.json(
-      { error: "Failed to load policies" },
-      { status: 500 }
+      { error: text || "Failed to load policies" },
+      { status: res.status }
     );
   }
+  const data = await res.json();
+  return NextResponse.json(data);
 }
 
 export async function POST(request: NextRequest) {
+  const session = await auth();
+  const token = (session as { accessToken?: string } | null)?.accessToken;
+  const headers: Record<string, string> = {
+    "Content-Type": "application/json",
+  };
+  if (token) headers["Authorization"] = `Bearer ${token}`;
+
+  let body: unknown;
   try {
-    const body = await request.json();
-    const { routinePolicies, modulePolicies } = body;
-
-    // Validate structure
-    if (routinePolicies && typeof routinePolicies !== "object") {
-      return NextResponse.json(
-        { error: "routinePolicies must be an object" },
-        { status: 400 }
-      );
-    }
-    if (modulePolicies && typeof modulePolicies !== "object") {
-      return NextResponse.json(
-        { error: "modulePolicies must be an object" },
-        { status: 400 }
-      );
-    }
-
-    const policies: PoliciesData = {
-      routinePolicies: routinePolicies || {},
-      modulePolicies: modulePolicies || {},
-    };
-
-    // Validate that all values are arrays
-    for (const [key, value] of Object.entries(policies.routinePolicies)) {
-      if (!Array.isArray(value)) {
-        return NextResponse.json(
-          { error: `routinePolicies[${key}] must be an array` },
-          { status: 400 }
-        );
-      }
-    }
-    for (const [key, value] of Object.entries(policies.modulePolicies)) {
-      if (!Array.isArray(value)) {
-        return NextResponse.json(
-          { error: `modulePolicies[${key}] must be an array` },
-          { status: 400 }
-        );
-      }
-    }
-
-    await savePolicies(policies);
-    return NextResponse.json({ success: true });
-  } catch (error) {
-    console.error("Failed to save policies:", error);
+    body = await request.json();
+  } catch {
     return NextResponse.json(
-      { error: "Failed to save policies" },
-      { status: 500 }
+      { error: "Invalid JSON body" },
+      { status: 400 }
     );
   }
+
+  const { routinePolicies, modulePolicies } = body as {
+    routinePolicies?: Record<string, string[]>;
+    modulePolicies?: Record<string, string[]>;
+  };
+
+  if (routinePolicies && typeof routinePolicies !== "object") {
+    return NextResponse.json(
+      { error: "routinePolicies must be an object" },
+      { status: 400 }
+    );
+  }
+  if (modulePolicies && typeof modulePolicies !== "object") {
+    return NextResponse.json(
+      { error: "modulePolicies must be an object" },
+      { status: 400 }
+    );
+  }
+
+  const res = await fetch(`${API_BASE}/api/v1/access-policies`, {
+    method: "POST",
+    headers,
+    body: JSON.stringify({
+      routinePolicies: routinePolicies || {},
+      modulePolicies: modulePolicies || {},
+    }),
+  });
+
+  if (!res.ok) {
+    const text = await res.text();
+    return NextResponse.json(
+      { error: text || "Failed to save policies" },
+      { status: res.status }
+    );
+  }
+  const data = await res.json();
+  return NextResponse.json(data);
 }

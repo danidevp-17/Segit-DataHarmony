@@ -13,6 +13,7 @@ import { navigation } from "@/lib/nav";
 
 interface Routine {
   id: string;
+  slug: string;
   name: string;
   description: string;
 }
@@ -91,13 +92,13 @@ export default function PoliciesPage() {
     }
   };
 
-  const handleToggleRoutineDatasource = (routineId: string, datasourceId: string) => {
+  const handleToggleRoutineDatasource = (routineSlug: string, datasourceId: string) => {
     setRoutinePolicies((prev) => {
-      const current = prev[routineId] || [];
+      const current = prev[routineSlug] || [];
       const updated = current.includes(datasourceId)
         ? current.filter((id) => id !== datasourceId)
         : [...current, datasourceId];
-      return { ...prev, [routineId]: updated };
+      return { ...prev, [routineSlug]: updated };
     });
   };
 
@@ -269,7 +270,7 @@ export default function PoliciesPage() {
               </thead>
               <tbody className="divide-y divide-slate-100">
                 {routines.map((routine) => {
-                  const allowedIds = routinePolicies[routine.id] || [];
+                  const allowedIds = routinePolicies[routine.slug] || [];
                   return (
                     <tr key={routine.id} className="hover:bg-slate-50">
                       <td className="px-5 py-4">
@@ -278,7 +279,7 @@ export default function PoliciesPage() {
                             {routine.name}
                           </p>
                           <p className="text-xs text-slate-500 mt-0.5">
-                            {routine.id}
+                            {routine.slug}
                           </p>
                         </div>
                       </td>
@@ -295,7 +296,7 @@ export default function PoliciesPage() {
                                   type="checkbox"
                                   checked={isAllowed}
                                   onChange={() =>
-                                    handleToggleRoutineDatasource(routine.id, ds.id)
+                                    handleToggleRoutineDatasource(routine.slug, ds.id)
                                   }
                                   className="rounded border-slate-300 text-cyan-600 focus:ring-cyan-500"
                                 />
