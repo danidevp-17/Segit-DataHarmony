@@ -11,8 +11,18 @@ import {
   Database,
   Play,
 } from "lucide-react";
+import { useSession } from "next-auth/react";
 import BackButton from "@/components/BackButton";
-import type { DatasourceType } from "@/lib/admin/datasources";
+import {
+  listDataSources,
+  createDataSource,
+  updateDataSource,
+  deleteDataSource,
+  testDataSourceConnection,
+  testConnectionPayload,
+  type DataSourceForUI,
+  type DatasourceType,
+} from "@/lib/api/data-sources";
 
 const DEFAULT_PORTS: Record<DatasourceType, number> = {
   postgres: 5432,
@@ -20,19 +30,13 @@ const DEFAULT_PORTS: Record<DatasourceType, number> = {
   oracle: 1521,
 };
 
-interface Datasource {
-  id: string;
-  name: string;
-  type: DatasourceType;
-  host: string;
-  port: number;
-  database?: string;
-  serviceName?: string;
-  username: string;
-  options?: Record<string, any>;
-}
+type Datasource = DataSourceForUI;
 
 export default function DatasourcesPage() {
+  const { data: session } = useSession();
+  const accessToken = (session as { accessToken?: string } | null)?.accessToken ?? null;
+  const apiOptions = { accessToken };
+
   const [datasources, setDatasources] = useState<Datasource[]>([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
@@ -67,11 +71,8 @@ export default function DatasourcesPage() {
 
   const loadDatasources = async () => {
     try {
-      const res = await fetch("/api/admin/datasources");
-      if (res.ok) {
-        const data = await res.json();
-        setDatasources(data);
-      }
+      const data = await listDataSources(apiOptions);
+      setDatasources(data);
     } catch (error) {
       console.error("Failed to load datasources:", error);
     } finally {
@@ -161,25 +162,22 @@ export default function DatasourcesPage() {
     setTestStatus({ state: "testing", message: "Testing connection..." });
 
     try {
-      const res = await fetch("/api/admin/datasources/test", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
+      const data = await testConnectionPayload(
+        {
           type: formData.type,
           host: formData.host,
           port: formData.port,
           database: formData.database,
-          serviceName: formData.serviceName,
+          service_name: formData.serviceName,
           username: formData.username,
           password: formData.password,
           options:
             formData.type === "sqlserver"
               ? { encrypt: formData.sqlServerEncrypt }
               : {},
-        }),
-      });
-
-      const data = await res.json();
+        },
+        apiOptions
+      );
 
       if (data.ok) {
         setTestStatus({
@@ -205,27 +203,16 @@ export default function DatasourcesPage() {
     if (!confirm("Are you sure you want to delete this datasource?")) return;
 
     try {
-      const res = await fetch(`/api/admin/datasources/${id}`, {
-        method: "DELETE",
+      await deleteDataSource(id, apiOptions);
+      setStatus({
+        type: "success",
+        message: "Datasource deleted successfully",
       });
-
-      if (res.ok) {
-        setStatus({
-          type: "success",
-          message: "Datasource deleted successfully",
-        });
-        loadDatasources();
-      } else {
-        const data = await res.json();
-        setStatus({
-          type: "error",
-          message: data.error || "Failed to delete datasource",
-        });
-      }
-    } catch (error) {
+      loadDatasources();
+    } catch (error: unknown) {
       setStatus({
         type: "error",
-        message: "Failed to delete datasource",
+        message: error instanceof Error ? error.message : "Failed to delete datasource",
       });
     }
   };
@@ -233,12 +220,9 @@ export default function DatasourcesPage() {
   const handleTest = async (id: string) => {
     setTestingId(id);
     setStatus({ type: null, message: "" }); // Clear previous status
-    
+
     try {
-      const res = await fetch(`/api/admin/datasources/${id}/test`, {
-        method: "POST",
-      });
-      const data = await res.json();
+      const data = await testDataSourceConnection(id, apiOptions);
 
       if (data.ok) {
         setStatus({
@@ -289,60 +273,65 @@ export default function DatasourcesPage() {
       return;
     }
 
-    const url = editingId
-      ? `/api/admin/datasources/${editingId}`
-      : "/api/admin/datasources";
-    const method = editingId ? "PUT" : "POST";
-
     try {
-      const payload: Record<string, unknown> = {
-        name: formData.name,
-        type: formData.type,
-        host: formData.host,
-        port: formData.port,
-        database: formData.database,
-        serviceName: formData.serviceName,
-        username: formData.username,
-        password: formData.password,
-      };
-      if (formData.type === "sqlserver") {
-        payload.options = { encrypt: formData.sqlServerEncrypt };
-      }
-      const res = await fetch(url, {
-        method,
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
-
-      if (res.ok) {
-        setStatus({
-          type: "success",
-          message: editingId
-            ? "Datasource updated successfully"
-            : "Datasource created successfully",
-        });
-        setShowModal(false);
-        setTestStatus({ state: "not_tested", message: "" });
-        loadDatasources();
+      const options = formData.type === "sqlserver" ? { encrypt: formData.sqlServerEncrypt } : undefined;
+      if (editingId) {
+        await updateDataSource(
+          editingId,
+          {
+            name: formData.name,
+            type: formData.type,
+            host: formData.host,
+            port: formData.port,
+            database: formData.database,
+            service_name: formData.serviceName,
+            username: formData.username,
+            password: formData.password || undefined,
+            options,
+          },
+          apiOptions
+        );
       } else {
-        const data = await res.json();
-        // If it's a validation error from backend, update test status
-        if (res.status === 422 && data.testError) {
-          setTestStatus({
-            state: "failed",
-            message: data.testError,
-            details: data.details,
-          });
-        }
-        setStatus({
-          type: "error",
-          message: data.error || "Failed to save datasource",
+        await createDataSource(
+          {
+            name: formData.name,
+            type: formData.type,
+            host: formData.host,
+            port: formData.port,
+            database: formData.database,
+            service_name: formData.serviceName,
+            username: formData.username,
+            password: formData.password,
+            options,
+          },
+          apiOptions
+        );
+      }
+      setStatus({
+        type: "success",
+        message: editingId
+          ? "Datasource updated successfully"
+          : "Datasource created successfully",
+      });
+      setShowModal(false);
+      setTestStatus({ state: "not_tested", message: "" });
+      loadDatasources();
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : { message: "Failed to save datasource" };
+      const message = err instanceof Error ? err.message : String((err as { message?: string }).message);
+      const detail = error && typeof error === "object" && "detail" in error ? (error as { detail?: unknown }).detail : null;
+      if (detail && typeof detail === "object" && "testError" in detail) {
+        setTestStatus({
+          state: "failed",
+          message: (detail as { testError?: string }).testError ?? message,
+          details: (detail as { details?: string }).details,
         });
       }
-    } catch (error) {
       setStatus({
         type: "error",
-        message: "Failed to save datasource",
+        message: typeof detail === "object" && detail && "error" in detail
+          ? String((detail as { error?: string }).error)
+          : message,
       });
     }
   };
