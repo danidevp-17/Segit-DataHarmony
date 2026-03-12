@@ -28,6 +28,7 @@ class Job(Base, UUIDMixin, TimestampMixin):
     payload = Column(JSONB, nullable=True)
     result = Column(JSONB, nullable=True)
     error = Column(Text, nullable=True)
+    artifacts = Column(JSONB, nullable=True, default=list)  # [{"name":"...","path":"...","url":"..."}]
     # created_by: UUID cuando tengamos users
     started_at = Column(DateTime(timezone=True), nullable=True)
     finished_at = Column(DateTime(timezone=True), nullable=True)
