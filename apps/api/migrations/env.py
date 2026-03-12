@@ -18,6 +18,7 @@ from core.config import settings
 from shared.base_model import Base
 from modules.registry.models import AppModule, AppSection
 from modules.jobs.models import Job
+from modules.data_sources.models import DataSource
 
 config = context.config
 if config.config_file_name is not None:
