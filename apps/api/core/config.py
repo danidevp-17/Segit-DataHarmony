@@ -36,6 +36,9 @@ class Settings(BaseSettings):
     azure_client_id: str = ""
     auth_skip_validation: bool = False  # Solo para desarrollo local sin Azure configurado
 
+    # Cifrado de credenciales (data_sources)
+    encryption_key: str = ""
+
     @property
     def cors_origins_list(self) -> list[str]:
         return [o.strip() for o in self.cors_origins.split(",") if o.strip()]
