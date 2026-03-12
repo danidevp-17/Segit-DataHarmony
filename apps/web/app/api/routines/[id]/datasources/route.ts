@@ -1,33 +1,35 @@
+/**
+ * Proxy a FastAPI /api/v1/routines/{id}/datasources
+ */
 import { NextRequest, NextResponse } from "next/server";
-import { getAllowedDatasourcesForRoutineInModule } from "@/lib/admin/policies";
-import { loadDatasources } from "@/lib/admin/datasources";
+import { auth } from "@/auth";
+
+const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+
+export const dynamic = "force-dynamic";
 
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  try {
-    const { id: routineId } = await params;
-    const moduleId = request.nextUrl.searchParams.get("moduleId") || "geology_geophysics";
-    
-    // Get allowed datasource IDs for this routine in this module
-    const allowedIds = await getAllowedDatasourcesForRoutineInModule(routineId, moduleId);
-    
-    // Load all datasources and filter by allowed IDs
-    const allDatasources = await loadDatasources();
-    const allowedDatasources = allDatasources
-      .filter((ds) => allowedIds.includes(ds.id))
-      .map((ds) => {
-        const { passwordSecretRef, ...rest } = ds;
-        return rest;
-      });
-    
-    return NextResponse.json(allowedDatasources);
-  } catch (error) {
-    console.error("Failed to load allowed datasources:", error);
+  const session = await auth();
+  const token = (session as { accessToken?: string } | null)?.accessToken;
+  const { id } = await params;
+  const moduleId = request.nextUrl.searchParams.get("moduleId") || "geology_geophysics";
+
+  const headers: Record<string, string> = {};
+  if (token) headers["Authorization"] = `Bearer ${token}`;
+
+  const res = await fetch(
+    `${API_BASE}/api/v1/routines/${id}/datasources?moduleId=${encodeURIComponent(moduleId)}`,
+    { headers }
+  );
+  if (!res.ok) {
     return NextResponse.json(
-      { error: "Failed to load allowed datasources" },
-      { status: 500 }
+      { error: await res.text() || "Failed" },
+      { status: res.status }
     );
   }
+  const data = await res.json();
+  return NextResponse.json(data);
 }
