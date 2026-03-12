@@ -14,6 +14,8 @@ services:
       - LOG_LEVEL=INFO
       - LOG_JSON=true
       - AUTH_SKIP_VALIDATION=true
+    volumes:
+      - ../../apps/data/uploads:/app/data/uploads
     depends_on:
       postgres:
         condition: service_healthy
