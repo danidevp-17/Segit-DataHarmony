@@ -12,13 +12,16 @@ import {
   Database,
 } from "lucide-react";
 import CodeEditor from "./CodeEditor";
-import type { DQScript } from "@/lib/data-quality-scripts";
+import type { DQScript } from "@/lib/api/data-quality";
+import { updateScriptContent } from "@/lib/api/data-quality";
+import type { ApiClientOptions } from "@/lib/api/client";
 
 interface ScriptEditorPanelProps {
   script: DQScript | null;
   initialEditMode?: boolean;
   onClose: () => void;
   onSaved: (id: string, newContent: string) => void;
+  apiOptions?: ApiClientOptions;
 }
 
 const LANGUAGE_CONFIG = {
@@ -47,6 +50,7 @@ export default function ScriptEditorPanel({
   initialEditMode = false,
   onClose,
   onSaved,
+  apiOptions = {},
 }: ScriptEditorPanelProps) {
   const [editing, setEditing] = useState(initialEditMode);
   const [content, setContent] = useState(script?.content ?? "");
@@ -76,17 +80,11 @@ export default function ScriptEditorPanel({
   const handleSave = async () => {
     setSaving(true);
     try {
-      const res = await fetch(`/api/data-quality/scripts/${script.id}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ content }),
-      });
-      if (res.ok) {
-        onSaved(script.id, content);
-        setSaved(true);
-        setEditing(false);
-        setTimeout(() => setSaved(false), 2500);
-      }
+      await updateScriptContent(script.id, content, apiOptions);
+      onSaved(script.id, content);
+      setSaved(true);
+      setEditing(false);
+      setTimeout(() => setSaved(false), 2500);
     } finally {
       setSaving(false);
     }

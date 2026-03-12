@@ -1,32 +1,34 @@
+/**
+ * Proxy de upload a FastAPI.
+ * El cliente puede subir directamente a FastAPI con apiPostFormData.
+ * Esta ruta se mantiene por si algún flujo la usa; en la migración el modal
+ * usará el cliente API (uploadFile) que llama a FastAPI directo.
+ */
 import { NextRequest, NextResponse } from "next/server";
-import { randomUUID } from "crypto";
-import { saveUploadedFile } from "@/lib/data-quality-files";
+import { auth } from "@/auth";
+
+const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
 export const dynamic = "force-dynamic";
 
 export async function POST(req: NextRequest) {
-  try {
-    const formData = await req.formData();
-    const file = formData.get("file") as File | null;
+  const session = await auth();
+  const token = (session as { accessToken?: string } | null)?.accessToken;
+  const formData = await req.formData();
 
-    if (!file) {
-      return NextResponse.json({ error: "No file provided" }, { status: 400 });
-    }
+  const headers: Record<string, string> = {};
+  if (token) headers["Authorization"] = `Bearer ${token}`;
 
-    const fileId = randomUUID();
-    const bytes = await file.arrayBuffer();
-    const buffer = Buffer.from(bytes);
+  const res = await fetch(`${API_BASE}/api/v1/data-quality/files`, {
+    method: "POST",
+    body: formData,
+    headers,
+  });
 
-    await saveUploadedFile(fileId, buffer);
-
-    return NextResponse.json({
-      fileId,
-      fileName: file.name,
-      mimeType: file.type || "application/octet-stream",
-      fileSize: buffer.length,
-    });
-  } catch (err) {
-    console.error("File upload error:", err);
-    return NextResponse.json({ error: "Upload failed" }, { status: 500 });
+  if (!res.ok) {
+    const text = await res.text();
+    return NextResponse.json({ error: text || "Upload failed" }, { status: res.status });
   }
+  const data = await res.json();
+  return NextResponse.json(data, { status: 201 });
 }

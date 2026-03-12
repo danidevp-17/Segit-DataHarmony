@@ -109,3 +109,29 @@ export async function apiDelete(
     throw new Error(`API error ${res.status}: ${text || res.statusText}`);
   }
 }
+
+/** POST con FormData (para upload de archivos). No envía Content-Type para que el browser fije el boundary. */
+export async function apiPostFormData<T = unknown>(
+  path: string,
+  formData: FormData,
+  options?: ApiClientOptions
+): Promise<T> {
+  const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+  const headers: Record<string, string> = {
+    ...(options?.headers as Record<string, string>),
+  };
+  if (options?.accessToken) {
+    headers["Authorization"] = `Bearer ${options.accessToken}`;
+  }
+  const res = await fetch(`${API_BASE_URL}${path}`, {
+    method: "POST",
+    body: formData,
+    headers,
+  });
+  if (!res.ok) {
+    const text = await res.text();
+    throw new Error(`API error ${res.status}: ${text || res.statusText}`);
+  }
+  if (res.status === 204) return undefined as T;
+  return res.json() as Promise<T>;
+}

@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { FileText, ExternalLink, X, Trash2, Paperclip, FileSpreadsheet, File } from "lucide-react";
-import type { DQDocument } from "@/lib/data-quality-docs";
+import type { DQDocument } from "@/lib/api/data-quality";
 
 interface DocumentationCardProps {
   document: DQDocument;

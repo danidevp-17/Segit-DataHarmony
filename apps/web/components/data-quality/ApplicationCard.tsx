@@ -1,7 +1,7 @@
 "use client";
 
 import { ExternalLink, Globe, Trash2 } from "lucide-react";
-import type { DQApplication } from "@/lib/data-quality-apps";
+import type { DQApplication } from "@/lib/api/data-quality";
 
 interface ApplicationCardProps {
   application: DQApplication;

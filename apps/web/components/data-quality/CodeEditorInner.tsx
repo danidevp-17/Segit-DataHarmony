@@ -6,7 +6,7 @@ import { sql } from "@codemirror/lang-sql";
 import { StreamLanguage } from "@codemirror/language";
 import { EditorView } from "@codemirror/view";
 import { shell } from "@codemirror/legacy-modes/mode/shell";
-import type { ScriptLanguage } from "@/lib/data-quality-scripts";
+import type { ScriptLanguage } from "@/lib/api/data-quality";
 
 interface CodeEditorInnerProps {
   value: string;

@@ -1,6 +1,11 @@
+/**
+ * Proxy de descarga de archivos a FastAPI.
+ * Reenvía la petición con el token de sesión.
+ */
 import { NextRequest, NextResponse } from "next/server";
-import { readUploadedFile } from "@/lib/data-quality-files";
-import { loadDocuments } from "@/lib/data-quality-docs";
+import { auth } from "@/auth";
+
+const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
 export const dynamic = "force-dynamic";
 
@@ -8,27 +13,30 @@ export async function GET(
   _req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  try {
-    const { id } = await params;
+  const session = await auth();
+  const token = (session as { accessToken?: string } | null)?.accessToken;
+  const { id } = await params;
 
-    // Resolve fileName and mimeType from documents catalog
-    const docs = await loadDocuments();
-    const doc = docs.find((d) => d.fileId === id);
+  const headers: Record<string, string> = {};
+  if (token) headers["Authorization"] = `Bearer ${token}`;
 
-    const buffer = await readUploadedFile(id);
+  const res = await fetch(`${API_BASE}/api/v1/data-quality/files/${id}`, {
+    headers,
+  });
 
-    const mimeType = doc?.mimeType ?? "application/octet-stream";
-    const fileName = doc?.fileName ?? id;
-
-    return new NextResponse(new Uint8Array(buffer), {
-      status: 200,
-      headers: {
-        "Content-Type": mimeType,
-        "Content-Disposition": `inline; filename="${encodeURIComponent(fileName)}"`,
-        "Cache-Control": "no-store",
-      },
-    });
-  } catch {
-    return NextResponse.json({ error: "File not found" }, { status: 404 });
+  if (!res.ok) {
+    return NextResponse.json({ error: "File not found" }, { status: res.status });
   }
+
+  const contentType = res.headers.get("content-type") ?? "application/octet-stream";
+  const blob = await res.blob();
+
+  return new NextResponse(blob, {
+    status: 200,
+    headers: {
+      "Content-Type": contentType,
+      "Content-Disposition": res.headers.get("content-disposition") ?? `inline; filename="${id}"`,
+      "Cache-Control": "no-store",
+    },
+  });
 }

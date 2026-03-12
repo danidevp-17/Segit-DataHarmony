@@ -1,7 +1,7 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import type { ScriptLanguage } from "@/lib/data-quality-scripts";
+import type { ScriptLanguage } from "@/lib/api/data-quality";
 
 export interface CodeEditorProps {
   value: string;

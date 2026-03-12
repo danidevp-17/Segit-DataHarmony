@@ -1,7 +1,7 @@
 "use client";
 
 import { FileCode2, Database, Terminal, Eye, Pencil, Trash2 } from "lucide-react";
-import type { DQScript } from "@/lib/data-quality-scripts";
+import type { DQScript } from "@/lib/api/data-quality";
 
 interface ScriptCardProps {
   script: DQScript;

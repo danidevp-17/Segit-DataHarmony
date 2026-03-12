@@ -27,9 +27,17 @@ import ApplicationCard from "@/components/data-quality/ApplicationCard";
 import DocumentationCard from "@/components/data-quality/DocumentationCard";
 import ScriptEditorPanel from "@/components/data-quality/ScriptEditorPanel";
 import DocViewerPanel from "@/components/data-quality/DocViewerPanel";
-import type { DQScript, ScriptLanguage } from "@/lib/data-quality-scripts";
-import type { DQApplication } from "@/lib/data-quality-apps";
-import type { DQDocument, DocType } from "@/lib/data-quality-docs";
+import type { DQScript, DQApplication, DQDocument, ScriptLanguage, DocType } from "@/lib/api/data-quality";
+import type { ApiClientOptions } from "@/lib/api/client";
+import {
+  deleteScript,
+  deleteApplication,
+  deleteDocument,
+  createScript,
+  createApplication,
+  createDocument,
+  uploadFile,
+} from "@/lib/api/data-quality";
 
 type Tab = "scripts" | "applications" | "documentation";
 type LanguageFilter = "all" | "python" | "bash" | "sql";
@@ -39,6 +47,7 @@ interface DataQualityTabsProps {
   scripts: DQScript[];
   applications: DQApplication[];
   documents: DQDocument[];
+  apiOptions?: ApiClientOptions;
 }
 
 const TABS: { id: Tab; label: string; icon: React.ComponentType<{ className?: string }> }[] = [
@@ -99,6 +108,7 @@ export default function DataQualityTabs({
   scripts: initialScripts,
   applications: initialApplications,
   documents: initialDocuments,
+  apiOptions = {},
 }: DataQualityTabsProps) {
   const [activeTab, setActiveTab] = useState<Tab>("scripts");
 
@@ -167,18 +177,18 @@ export default function DataQualityTabs({
   // ── Handlers ────────────────────────────────────────────────────────────────
 
   const handleDeleteScript = async (id: string) => {
-    await fetch(`/api/data-quality/scripts/${id}`, { method: "DELETE" });
+    await deleteScript(id, apiOptions);
     setScripts((prev) => prev.filter((s) => s.id !== id));
     if (panelScript?.id === id) setPanelScript(null);
   };
 
   const handleDeleteApp = async (id: string) => {
-    await fetch(`/api/data-quality/applications/${id}`, { method: "DELETE" });
+    await deleteApplication(id, apiOptions);
     setApplications((prev) => prev.filter((a) => a.id !== id));
   };
 
   const handleDeleteDoc = async (id: string) => {
-    await fetch(`/api/data-quality/documents/${id}`, { method: "DELETE" });
+    await deleteDocument(id, apiOptions);
     setDocuments((prev) => prev.filter((d) => d.id !== id));
     if (panelDoc?.id === id) setPanelDoc(null);
   };
@@ -452,6 +462,7 @@ export default function DataQualityTabs({
           initialEditMode={panelEditMode}
           onClose={() => setPanelScript(null)}
           onSaved={handleScriptSaved}
+          apiOptions={apiOptions}
         />
       )}
 
@@ -465,17 +476,26 @@ export default function DataQualityTabs({
 
       {/* ── Modals ───────────────────────────────────────────────────────────── */}
       {showNewScript && (
-        <NewScriptModal onClose={() => setShowNewScript(false)} onCreated={handleAddScript} />
+        <NewScriptModal
+          onClose={() => setShowNewScript(false)}
+          onCreated={handleAddScript}
+          apiOptions={apiOptions}
+        />
       )}
       {showNewApp && (
         <NewAppModal
           categories={APP_CATEGORIES}
           onClose={() => setShowNewApp(false)}
           onCreated={handleAddApp}
+          apiOptions={apiOptions}
         />
       )}
       {showNewDoc && (
-        <NewDocModal onClose={() => setShowNewDoc(false)} onCreated={handleAddDoc} />
+        <NewDocModal
+          onClose={() => setShowNewDoc(false)}
+          onCreated={handleAddDoc}
+          apiOptions={apiOptions}
+        />
       )}
     </div>
   );
@@ -820,9 +840,11 @@ const SCRIPT_LANG_EXT: Record<string, ScriptLanguage> = {
 function NewScriptModal({
   onClose,
   onCreated,
+  apiOptions = {},
 }: {
   onClose: () => void;
   onCreated: (s: DQScript) => void;
+  apiOptions?: ApiClientOptions;
 }) {
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
@@ -852,13 +874,10 @@ function NewScriptModal({
     setSaving(true);
     setError("");
     try {
-      const res = await fetch("/api/data-quality/scripts", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, description, language, content }),
-      });
-      if (!res.ok) throw new Error("Error al crear el script");
-      const script: DQScript = await res.json();
+      const script = await createScript(
+        { name, description, language, content },
+        apiOptions
+      );
       onCreated(script);
     } catch {
       setError("No se pudo crear el script. Inténtalo de nuevo.");
@@ -965,10 +984,12 @@ function NewAppModal({
   categories,
   onClose,
   onCreated,
+  apiOptions = {},
 }: {
   categories: string[];
   onClose: () => void;
   onCreated: (a: DQApplication) => void;
+  apiOptions?: ApiClientOptions;
 }) {
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
@@ -983,13 +1004,10 @@ function NewAppModal({
     setSaving(true);
     setError("");
     try {
-      const res = await fetch("/api/data-quality/applications", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, description, url, category }),
-      });
-      if (!res.ok) throw new Error();
-      const app: DQApplication = await res.json();
+      const app = await createApplication(
+        { name, description, url, category },
+        apiOptions
+      );
       onCreated(app);
     } catch {
       setError("No se pudo crear la aplicación. Inténtalo de nuevo.");
@@ -1033,9 +1051,11 @@ const DOC_TYPES: { id: DocType; label: string; icon: React.ComponentType<{ class
 function NewDocModal({
   onClose,
   onCreated,
+  apiOptions = {},
 }: {
   onClose: () => void;
   onCreated: (d: DQDocument) => void;
+  apiOptions?: ApiClientOptions;
 }) {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
@@ -1076,11 +1096,7 @@ function NewDocModal({
       // Upload file first if needed
       if (type === "file" && selectedFile) {
         setUploadProgress("uploading");
-        const fd = new FormData();
-        fd.append("file", selectedFile);
-        const uploadRes = await fetch("/api/data-quality/files", { method: "POST", body: fd });
-        if (!uploadRes.ok) throw new Error("Error al subir el archivo");
-        const uploadData = await uploadRes.json();
+        const uploadData = await uploadFile(selectedFile, apiOptions);
         fileId = uploadData.fileId;
         fileName = uploadData.fileName;
         mimeType = uploadData.mimeType;
@@ -1088,23 +1104,20 @@ function NewDocModal({
         setUploadProgress("done");
       }
 
-      const res = await fetch("/api/data-quality/documents", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
+      const doc = await createDocument(
+        {
           title,
           description,
           type,
           url: type === "link" ? url : undefined,
           content: type === "markdown" ? content : undefined,
-          fileId,
-          fileName,
-          mimeType,
-          fileSize,
-        }),
-      });
-      if (!res.ok) throw new Error();
-      const doc: DQDocument = await res.json();
+          file_id: fileId,
+          file_name: fileName,
+          mime_type: mimeType,
+          file_size: fileSize,
+        },
+        apiOptions
+      );
       onCreated(doc);
     } catch {
       setUploadProgress("error");

@@ -13,7 +13,7 @@ import {
   Image as ImageIcon,
   Info,
 } from "lucide-react";
-import { DQDocument } from "@/lib/data-quality-docs";
+import type { DQDocument } from "@/lib/api/data-quality";
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
