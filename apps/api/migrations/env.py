@@ -20,6 +20,7 @@ from modules.registry.models import AppModule, AppSection
 from modules.jobs.models import Job
 from modules.data_sources.models import DataSource
 from modules.data_quality.models import AppScript, AppApplication, AppDocument
+from modules.routines.models import Routine
 
 config = context.config
 if config.config_file_name is not None:
