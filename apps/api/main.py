@@ -14,12 +14,15 @@ from shared.base_model import Base
 from modules.registry.router import router as registry_router
 from modules.data_sources.router import router as data_sources_router
 from modules.data_quality.router import router as data_quality_router
+from modules.routines.router import router as routines_router
+from modules.jobs.router import router as jobs_router
 
 # Importar modelos para que Alembic los detecte
 from modules.registry.models import AppModule, AppSection
 from modules.jobs.models import Job
 from modules.data_sources.models import DataSource
 from modules.data_quality.models import AppScript, AppApplication, AppDocument
+from modules.routines.models import Routine
 
 
 @asynccontextmanager
@@ -49,6 +52,8 @@ app.add_middleware(
 app.include_router(registry_router, prefix="/api/v1")
 app.include_router(data_sources_router, prefix="/api/v1")
 app.include_router(data_quality_router, prefix="/api/v1")
+app.include_router(routines_router, prefix="/api/v1")
+app.include_router(jobs_router, prefix="/api/v1")
 
 
 @app.get("/health")
