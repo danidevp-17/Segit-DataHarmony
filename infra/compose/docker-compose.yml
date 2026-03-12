@@ -47,5 +47,24 @@ services:
     ports:
       - "6379:6379"
 
+  celery:
+    build:
+      context: ../../apps/api
+      dockerfile: Dockerfile
+    command: celery -A core.celery_app worker --loglevel=info
+    env_file:
+      - ../../.env
+    environment:
+      - DATABASE_URL=postgresql+psycopg2://postgres:postgres@postgres:5432/dataharmony
+      - REDIS_URL=redis://redis:6379/0
+      - AUTH_SKIP_VALIDATION=true
+    volumes:
+      - ../../apps/data:/app/data
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_started
+
 volumes:
   postgres_data:
