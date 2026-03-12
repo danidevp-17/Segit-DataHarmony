@@ -27,7 +27,7 @@ def get_routine_datasources(
     routine = get_routine(db, id_or_slug)
     if not routine:
         raise HTTPException(status_code=404, detail="Routine not found")
-    return get_allowed_datasources(db, moduleId)
+    return get_allowed_datasources(db, routine.slug, moduleId)
 
 
 @router.get("", response_model=list[RoutineResponse])
