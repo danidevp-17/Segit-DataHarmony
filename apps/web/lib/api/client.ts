@@ -110,6 +110,26 @@ export async function apiDelete(
   }
 }
 
+export async function apiPatch<T, B = unknown>(
+  path: string,
+  body?: B,
+  options?: ApiClientOptions
+): Promise<T> {
+  const res = await fetchWithAuth(path, {
+    method: "PATCH",
+    body: body !== undefined ? JSON.stringify(body) : undefined,
+    accessToken: options?.accessToken,
+    headers: options?.headers,
+    timeout: options?.timeout,
+  });
+  if (!res.ok) {
+    const text = await res.text();
+    throw new Error(`API error ${res.status}: ${text || res.statusText}`);
+  }
+  if (res.status === 204) return undefined as T;
+  return res.json() as Promise<T>;
+}
+
 /** POST con FormData (para upload de archivos). No envía Content-Type para que el browser fije el boundary. */
 export async function apiPostFormData<T = unknown>(
   path: string,

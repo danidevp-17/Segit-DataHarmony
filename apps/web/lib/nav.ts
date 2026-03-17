@@ -10,6 +10,7 @@ import {
   ShieldCheck,
   Layers,
   Shield,
+  HardDrive,
   type LucideIcon,
 } from "lucide-react";
 
@@ -80,6 +81,14 @@ export const navigation: (NavItem | NavGroup)[] = [
     icon: MessageSquare,
     children: [
       { label: "Chat", href: "/chat", icon: MessageSquare },
+    ],
+  },
+  {
+    id: "volumes",
+    label: "Storage & Volumes",
+    icon: HardDrive,
+    children: [
+      { label: "Volumes", href: "/volumes", icon: HardDrive },
     ],
   },
   {

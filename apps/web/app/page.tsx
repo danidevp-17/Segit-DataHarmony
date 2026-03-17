@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { loadCatalog } from "@/lib/catalog";
 import { listJobs } from "@/lib/jobs";
 import { navigation, NavGroup, getPinnableModules } from "@/lib/nav";
 import ModuleCard from "@/components/ModuleCard";
@@ -62,41 +61,15 @@ function getModuleDescription(label: string): string {
   return descriptions[label] || "Access module features and tools";
 }
 
-// Get most used routines from job history
-function getMostUsedRoutines(jobs: Array<{ routineId: string }>, routines: Array<{ id: string; name: string; description: string; params: Array<{ key: string }> }>) {
-  // Count routine usage
-  const routineCounts: Record<string, number> = {};
-  jobs.forEach((job) => {
-    routineCounts[job.routineId] = (routineCounts[job.routineId] || 0) + 1;
-  });
-
-  // Sort by usage count, then by name
-  const sortedRoutineIds = Object.entries(routineCounts)
-    .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
-    .map(([id]) => id);
-
-  // Get routine details and return top 4
-  const mostUsed = sortedRoutineIds
-    .map((id) => routines.find((r) => r.id === id))
-    .filter((r): r is NonNullable<typeof r> => r !== undefined)
-    .slice(0, 4);
-
-  // If we don't have enough from job history, fill with remaining routines
-  if (mostUsed.length < 4) {
-    const remaining = routines
-      .filter((r) => !mostUsed.some((m) => m.id === r.id))
-      .slice(0, 4 - mostUsed.length);
-    mostUsed.push(...remaining);
-  }
-
-  return mostUsed.slice(0, 4);
+// Placeholder — routines now come from the API (see /routines page)
+function getMostUsedRoutines(_jobs: Array<{ routineId: string }>, _routines: Array<unknown>) {
+  return [];
 }
 
 export default async function Home() {
-  const routines = await loadCatalog();
   const jobs = await listJobs();
   const modules = getModuleCards();
-  const quickRoutines = getMostUsedRoutines(jobs, routines);
+  const quickRoutines = getMostUsedRoutines(jobs, []);
 
   return (
     <div className="space-y-8">
@@ -217,7 +190,7 @@ export default async function Home() {
           </Link>
         </div>
         <div className="rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden">
-          <RecentJobsList jobs={jobs.slice(0, 8)} routines={routines} />
+          <RecentJobsList jobs={jobs.slice(0, 8)} />
         </div>
       </section>
     </div>
@@ -226,10 +199,8 @@ export default async function Home() {
 
 function RecentJobsList({
   jobs,
-  routines,
 }: {
   jobs: Array<{ id: string; routineId: string; status: string; createdAt: string }>;
-  routines: Array<{ id: string; name: string }>;
 }) {
   if (jobs.length === 0) {
     return (
@@ -279,8 +250,7 @@ function RecentJobsList({
     <div className="divide-y divide-slate-100">
       {jobs.map((job) => {
         const config = statusConfig[job.status] || statusConfig.queued;
-        const routine = routines.find((r) => r.id === job.routineId);
-        const routineName = routine?.name || job.routineId;
+        const routineName = job.routineId;
 
         return (
           <Link
