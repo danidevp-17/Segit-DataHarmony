@@ -1,0 +1,41 @@
+# FastAPI + servidor
+fastapi>=0.109.0
+uvicorn[standard]>=0.27.0
+
+# Config y validación
+pydantic>=2.5.0
+pydantic-settings>=2.1.0
+
+# Base de datos
+sqlalchemy>=2.0.25
+asyncpg>=0.29.0
+psycopg2-binary>=2.9.9
+
+# Migraciones
+alembic>=1.13.0
+
+# Logging estructurado
+loguru>=0.7.2
+
+# Utilidades
+python-multipart>=0.0.6
+httpx>=0.26.0
+PyJWT[crypto]>=2.8.0
+cryptography>=42.0.0
+
+# Connectors data_sources
+oracledb>=2.0.0
+pyodbc>=5.0.0
+
+# Data Quality - preview
+openpyxl>=3.1.0
+mammoth>=1.6.0
+
+# Celery
+celery[redis]>=5.3.0
+
+# Volumes — SFTP
+paramiko>=3.4.0
+
+# Volumes — SMB/CIFS (recursos compartidos Windows, equivalente a net use)
+smbprotocol>=1.13.0

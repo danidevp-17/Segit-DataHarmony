@@ -1,0 +1,19 @@
+# Env (secrets)
+.env
+.env.local
+.env.*.local
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.venv/
+venv/
+
+# Alembic
+# migrations/versions/*.pyc
+
+# IDE
+.idea/
+.vscode/
