@@ -19,6 +19,10 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && apt-get autoremove -y \
     && rm -rf /var/lib/apt/lists/*
 
+# NFS client para módulo volumes (mount -t nfs). Contenedor debe ejecutarse con cap_add: SYS_ADMIN para montar.
+RUN apt-get update && apt-get install -y --no-install-recommends nfs-common \
+    && rm -rf /var/lib/apt/lists/*
+
 # Microsoft ODBC Driver 18 for SQL Server (pyodbc)
 # python:3.11-slim = Debian Trixie (13). El repo de Debian 12 usa SHA-1 rechazado desde 2026-02-01
 RUN apt-get update && apt-get install -y --no-install-recommends curl ca-certificates \
