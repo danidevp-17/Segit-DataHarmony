@@ -54,7 +54,11 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   },
   callbacks: {
     jwt({ token, account, user }) {
-      if (account?.access_token) {
+      // El id_token tiene aud=client_id (validable por FastAPI).
+      // El access_token es para Graph API (aud=graph.microsoft.com) y falla la validación del backend.
+      if (account?.id_token) {
+        token.accessToken = account.id_token;
+      } else if (account?.access_token) {
         token.accessToken = account.access_token;
       }
       if (user) {
