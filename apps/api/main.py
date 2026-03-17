@@ -17,6 +17,7 @@ from modules.data_quality.router import router as data_quality_router
 from modules.routines.router import router as routines_router
 from modules.jobs.router import router as jobs_router
 from modules.access_policies.router import router as access_policies_router
+from modules.volumes.router import router as volumes_router
 
 # Importar modelos para que Alembic los detecte
 from modules.registry.models import AppModule, AppSection
@@ -25,6 +26,7 @@ from modules.data_sources.models import DataSource
 from modules.data_quality.models import AppScript, AppApplication, AppDocument
 from modules.routines.models import Routine
 from modules.access_policies.models import AccessPolicyRoutine, AccessPolicyModule
+from modules.volumes.models import AppVolume, VolumeAuditLog
 
 
 @asynccontextmanager
@@ -57,6 +59,7 @@ app.include_router(data_quality_router, prefix="/api/v1")
 app.include_router(routines_router, prefix="/api/v1")
 app.include_router(jobs_router, prefix="/api/v1")
 app.include_router(access_policies_router, prefix="/api/v1")
+app.include_router(volumes_router, prefix="/api/v1")
 
 
 @app.get("/health")
