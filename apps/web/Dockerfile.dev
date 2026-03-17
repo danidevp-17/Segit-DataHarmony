@@ -1,0 +1,14 @@
+FROM node:20-bookworm-slim
+
+WORKDIR /app
+
+COPY package.json package-lock.json ./
+RUN npm ci
+
+COPY . .
+
+EXPOSE 3000
+
+# Sin script .sh (CRLF en Windows rompe el shebang en Linux).
+# Si node_modules está vacío (volumen montado), npm ci antes de next dev.
+CMD ["sh", "-c", "if [ ! -f node_modules/.package-lock.json ]; then npm ci; fi && exec npx next dev -H 0.0.0.0 -p 3000"]
