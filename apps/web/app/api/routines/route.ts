@@ -3,8 +3,7 @@
  */
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/auth";
-
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+import { getApiBaseUrl } from "@/lib/api/url";
 
 export const dynamic = "force-dynamic";
 
@@ -13,7 +12,7 @@ export async function GET(req: NextRequest) {
   const token = (session as { accessToken?: string } | null)?.accessToken;
   const { searchParams } = req.nextUrl;
   const module = searchParams.get("module");
-  const url = `${API_BASE}/api/v1/routines${module ? `?module=${module}` : ""}`;
+  const url = `${getApiBaseUrl()}/api/v1/routines${module ? `?module=${module}` : ""}`;
   const headers: Record<string, string> = {};
   if (token) headers["Authorization"] = `Bearer ${token}`;
 

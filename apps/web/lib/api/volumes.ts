@@ -12,9 +12,9 @@ import {
   apiPut,
   type ApiClientOptions,
 } from "./client";
+import { getApiBaseUrl } from "./url";
 
 const BASE = "/api/v1/volumes";
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
 // ---------------------------------------------------------------------------
 // Tipos
@@ -201,7 +201,7 @@ export async function downloadFile(
   if (options?.accessToken) {
     headers["Authorization"] = `Bearer ${options.accessToken}`;
   }
-  const url = `${API_BASE_URL}${BASE}/${volumeId}/download?path=${encodeURIComponent(path)}`;
+  const url = `${getApiBaseUrl()}${BASE}/${volumeId}/download?path=${encodeURIComponent(path)}`;
   const res = await fetch(url, { headers });
   if (!res.ok) {
     const text = await res.text();
@@ -232,7 +232,7 @@ export async function downloadDirectoryAsZip(
   if (options?.accessToken) {
     headers["Authorization"] = `Bearer ${options.accessToken}`;
   }
-  const url = `${API_BASE_URL}${BASE}/${volumeId}/download-dir?path=${encodeURIComponent(path)}`;
+  const url = `${getApiBaseUrl()}${BASE}/${volumeId}/download-dir?path=${encodeURIComponent(path)}`;
   const res = await fetch(url, { headers });
   if (!res.ok) {
     const text = await res.text();
@@ -298,7 +298,7 @@ export async function deleteEntry(
   const headers: Record<string, string> = { "Content-Type": "application/json" };
   if (options?.accessToken) headers["Authorization"] = `Bearer ${options.accessToken}`;
   const res = await fetch(
-    `${API_BASE_URL}${BASE}/${volumeId}/entries?path=${encodeURIComponent(path)}`,
+    `${getApiBaseUrl()}${BASE}/${volumeId}/entries?path=${encodeURIComponent(path)}`,
     { method: "DELETE", headers },
   );
   if (!res.ok) {
