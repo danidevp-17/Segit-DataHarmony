@@ -24,7 +24,7 @@ Skills instalados en `.agents/skills/`. El agente debe activarlos leyendo el `SK
 ```
 apps/api/    ← FastAPI + SQLAlchemy + Celery (Python)
 apps/web/    ← Next.js 16 App Router (TypeScript + Tailwind)
-infra/       ← Docker Compose (api, postgres, redis, celery)
+infra/       ← Docker Compose (api, postgres, redis, celery, web)
 docs/        ← Arquitectura, sprints y seguimientos semanales
 ```
 
@@ -318,25 +318,30 @@ Nunca commitear `.env` ni `.env.local`. Ver `.env.example` como referencia.
 | `AUTH_MICROSOFT_ENTRA_ID_ISSUER` | `https://login.microsoftonline.com/<TENANT_ID>/v2.0` |
 | `NEXT_PUBLIC_USE_MICROSOFT_AUTH` | `true` para usar Azure AD; `false` para dev sin auth |
 | `NEXT_PUBLIC_API_URL` | URL base de la API (`http://localhost:8000`) |
+| `INTERNAL_API_URL` | Solo en Docker: URL interna para el servidor Next (`http://api:8000`). En local con `npm run dev` no hace falta. |
 
 ---
 
 ## Comandos frecuentes
 
 ```bash
-# Levantar todos los servicios (api, postgres, redis, celery)
-docker compose -f infra/compose/docker-compose.yml up -d
+# Levantar todo el proyecto (api, postgres, redis, celery, web)
+# Requiere apps/web/.env.local (copiar de .env.local.example y añadir AUTH_SECRET)
+docker compose -f infra/compose/docker-compose.yml up -d --build
+
+# Frontend en http://localhost:3000, API en http://localhost:8000
 
 # Ver logs
 docker compose -f infra/compose/docker-compose.yml logs -f api
 docker compose -f infra/compose/docker-compose.yml logs -f celery
+docker compose -f infra/compose/docker-compose.yml logs -f web
+
+# Tras cambios en package.json del frontend: rebuild
+docker compose -f infra/compose/docker-compose.yml build web --no-cache
 
 # Ejecutar seeders
 docker compose -f infra/compose/docker-compose.yml exec api python scripts/seed_registry.py
 docker compose -f infra/compose/docker-compose.yml exec api python scripts/seed_routines.py
-
-# Rebuild sin caché
-docker compose -f infra/compose/docker-compose.yml build --no-cache
 
 # Bajar y limpiar volúmenes
 docker compose -f infra/compose/docker-compose.yml down -v
