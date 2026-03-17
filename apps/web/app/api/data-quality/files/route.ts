@@ -6,8 +6,7 @@
  */
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/auth";
-
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+import { getApiBaseUrl } from "@/lib/api/url";
 
 export const dynamic = "force-dynamic";
 
@@ -19,7 +18,7 @@ export async function POST(req: NextRequest) {
   const headers: Record<string, string> = {};
   if (token) headers["Authorization"] = `Bearer ${token}`;
 
-  const res = await fetch(`${API_BASE}/api/v1/data-quality/files`, {
+  const res = await fetch(`${getApiBaseUrl()}/api/v1/data-quality/files`, {
     method: "POST",
     body: formData,
     headers,

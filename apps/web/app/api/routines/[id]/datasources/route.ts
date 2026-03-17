@@ -3,8 +3,7 @@
  */
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/auth";
-
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+import { getApiBaseUrl } from "@/lib/api/url";
 
 export const dynamic = "force-dynamic";
 
@@ -21,7 +20,7 @@ export async function GET(
   if (token) headers["Authorization"] = `Bearer ${token}`;
 
   const res = await fetch(
-    `${API_BASE}/api/v1/routines/${id}/datasources?moduleId=${encodeURIComponent(moduleId)}`,
+    `${getApiBaseUrl()}/api/v1/routines/${id}/datasources?moduleId=${encodeURIComponent(moduleId)}`,
     { headers }
   );
   if (!res.ok) {

@@ -66,5 +66,26 @@ services:
       redis:
         condition: service_started
 
+  web:
+    build:
+      context: ../../apps/web
+      dockerfile: Dockerfile.dev
+    ports:
+      - "3000:3000"
+    env_file:
+      - ../../apps/web/.env.local
+    environment:
+      - INTERNAL_API_URL=http://api:8000
+      - NEXT_PUBLIC_API_URL=http://localhost:8000
+      - AUTH_URL=http://localhost:3000
+      - WATCHPACK_POLLING=true
+    volumes:
+      - ../../apps/web:/app
+      - web_node_modules:/app/node_modules
+    depends_on:
+      api:
+        condition: service_started
+
 volumes:
   postgres_data:
+  web_node_modules:

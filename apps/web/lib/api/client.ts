@@ -2,8 +2,7 @@
  * Cliente HTTP para llamadas a la API FastAPI.
  * Incluye access token (Azure AD) cuando la sesión está disponible.
  */
-
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+import { getApiBaseUrl } from "./url";
 
 export type ApiClientOptions = {
   accessToken?: string | null;
@@ -27,7 +26,7 @@ async function fetchWithAuth(
   const controller = new AbortController();
   const id = setTimeout(() => controller.abort(), timeout);
 
-  const res = await fetch(`${API_BASE_URL}${path}`, {
+  const res = await fetch(`${getApiBaseUrl()}${path}`, {
     ...init,
     headers,
     signal: controller.signal,
@@ -136,14 +135,13 @@ export async function apiPostFormData<T = unknown>(
   formData: FormData,
   options?: ApiClientOptions
 ): Promise<T> {
-  const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
   const headers: Record<string, string> = {
     ...(options?.headers as Record<string, string>),
   };
   if (options?.accessToken) {
     headers["Authorization"] = `Bearer ${options.accessToken}`;
   }
-  const res = await fetch(`${API_BASE_URL}${path}`, {
+  const res = await fetch(`${getApiBaseUrl()}${path}`, {
     method: "POST",
     body: formData,
     headers,
