@@ -13,7 +13,7 @@ services:
       - CORS_ORIGINS=http://localhost:3000
       - LOG_LEVEL=INFO
       - LOG_JSON=true
-      - AUTH_SKIP_VALIDATION=true
+      # AUTH_SKIP_VALIDATION se lee desde .env (env_file arriba); no sobreescribir aquí.
     volumes:
       - ../../apps/data/uploads:/app/data/uploads
     depends_on:
@@ -57,7 +57,7 @@ services:
     environment:
       - DATABASE_URL=postgresql+psycopg2://postgres:postgres@postgres:5432/dataharmony
       - REDIS_URL=redis://redis:6379/0
-      - AUTH_SKIP_VALIDATION=true
+      # AUTH_SKIP_VALIDATION se lee desde .env (env_file arriba); no sobreescribir aquí.
     volumes:
       - ../../apps/data:/app/data
     depends_on:
