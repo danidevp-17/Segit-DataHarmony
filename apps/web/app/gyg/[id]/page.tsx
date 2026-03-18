@@ -16,40 +16,15 @@ import {
   Database,
 } from "lucide-react";
 import BackButton from "@/components/BackButton";
-import { getRoutine, getRoutineDatasources } from "@/lib/api/geology-geophysics";
+import {
+  getRoutine,
+  getRoutineDatasources,
+  type GygRoutine,
+  type DatasourceOption,
+} from "@/lib/api/geology-geophysics";
 import { createJob } from "@/lib/api/jobs";
 
-interface Param {
-  key: string;
-  label: string;
-  required?: boolean;
-}
-
-interface FileInput {
-  name: string;
-  label: string;
-  accept?: string;
-  multiple?: boolean;
-}
-
-interface Routine {
-  id: string;
-  slug: string;
-  name: string;
-  description: string;
-  script: string;
-  params: Param[];
-  fileInputs: FileInput[];
-  needsDatasource?: boolean;
-}
-
-interface Datasource {
-  id: string;
-  name: string;
-  type: string;
-}
-
-export default function RoutineDetailPage() {
+export default function GygRoutineDetailPage() {
   const params = useParams();
   const router = useRouter();
   const { data: session } = useSession();
@@ -58,14 +33,14 @@ export default function RoutineDetailPage() {
 
   const routineIdOrSlug = params.id as string;
 
-  const [routine, setRoutine] = useState<Routine | null>(null);
+  const [routine, setRoutine] = useState<GygRoutine | null>(null);
   const [loading, setLoading] = useState(true);
   const [formValues, setFormValues] = useState<Record<string, string>>({});
   const [files, setFiles] = useState<Record<string, FileList | null>>({});
   const [submitting, setSubmitting] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [globalError, setGlobalError] = useState<string | null>(null);
-  const [datasources, setDatasources] = useState<Datasource[]>([]);
+  const [datasources, setDatasources] = useState<DatasourceOption[]>([]);
   const [selectedDatasourceId, setSelectedDatasourceId] = useState<string>("");
   const [loadingDatasources, setLoadingDatasources] = useState(false);
 
@@ -75,7 +50,7 @@ export default function RoutineDetailPage() {
         const data = await getRoutine(routineIdOrSlug, apiOptions);
         setRoutine(data);
         const initial: Record<string, string> = {};
-        data.params?.forEach((p: Param) => {
+        data.params?.forEach((p) => {
           initial[p.key] = "";
         });
         setFormValues(initial);
@@ -206,7 +181,7 @@ export default function RoutineDetailPage() {
       {/* Header */}
       <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
         <div className="flex items-start gap-4">
-          <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-linear-to-br from-cyan-500 to-teal-600 text-white shadow-sm">
+          <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-cyan-500 to-teal-600 text-white shadow-sm">
             <Play className="h-6 w-6" />
           </div>
           <div className="flex-1">
@@ -227,10 +202,9 @@ export default function RoutineDetailPage() {
 
       {/* Form */}
       <form onSubmit={handleSubmit} className="space-y-6">
-        {/* Global error */}
         {globalError && (
           <div className="flex items-center gap-3 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-red-700">
-            <AlertCircle className="h-5 w-5 shrink-0" />
+            <AlertCircle className="h-5 w-5 flex-shrink-0" />
             <p className="text-sm font-medium">{globalError}</p>
           </div>
         )}
@@ -243,12 +217,8 @@ export default function RoutineDetailPage() {
                 <Settings2 className="h-5 w-5" />
               </div>
               <div>
-                <h2 className="text-sm font-semibold text-slate-800">
-                  Parameters
-                </h2>
-                <p className="text-xs text-slate-500">
-                  Configure execution parameters
-                </p>
+                <h2 className="text-sm font-semibold text-slate-800">Parameters</h2>
+                <p className="text-xs text-slate-500">Configure execution parameters</p>
               </div>
             </div>
             <div className="grid gap-5 p-5 md:grid-cols-2">
@@ -289,9 +259,7 @@ export default function RoutineDetailPage() {
                 <Database className="h-5 w-5" />
               </div>
               <div>
-                <h2 className="text-sm font-semibold text-slate-800">
-                  Datasource
-                </h2>
+                <h2 className="text-sm font-semibold text-slate-800">Datasource</h2>
                 <p className="text-xs text-slate-500">
                   Select a datasource for this routine execution
                 </p>
@@ -306,7 +274,8 @@ export default function RoutineDetailPage() {
               ) : datasources.length === 0 ? (
                 <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3">
                   <p className="text-sm text-amber-700">
-                    No datasources available for this routine. Please configure access policies in Admin.
+                    No datasources available for this routine. Please configure access
+                    policies in Admin.
                   </p>
                 </div>
               ) : (
@@ -336,12 +305,8 @@ export default function RoutineDetailPage() {
                 <Upload className="h-5 w-5" />
               </div>
               <div>
-                <h2 className="text-sm font-semibold text-slate-800">
-                  File Inputs
-                </h2>
-                <p className="text-xs text-slate-500">
-                  Upload required files for processing
-                </p>
+                <h2 className="text-sm font-semibold text-slate-800">File Inputs</h2>
+                <p className="text-xs text-slate-500">Upload required files for processing</p>
               </div>
             </div>
             <div className="space-y-5 p-5">
@@ -350,9 +315,7 @@ export default function RoutineDetailPage() {
                   <label className="text-sm font-medium text-slate-700">
                     {fi.label}
                     {fi.multiple && (
-                      <span className="ml-2 text-xs text-slate-400">
-                        (multiple allowed)
-                      </span>
+                      <span className="ml-2 text-xs text-slate-400">(multiple allowed)</span>
                     )}
                   </label>
                   <div
@@ -376,9 +339,7 @@ export default function RoutineDetailPage() {
                           <p className="mt-2 text-sm font-medium text-cyan-700">
                             {files[fi.name]!.length} file(s) selected
                           </p>
-                          <p className="text-xs text-slate-500 mt-1">
-                            Click to change
-                          </p>
+                          <p className="text-xs text-slate-500 mt-1">Click to change</p>
                         </>
                       ) : (
                         <>

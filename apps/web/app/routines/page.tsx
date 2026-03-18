@@ -12,7 +12,7 @@ import {
   FolderOpen,
 } from "lucide-react";
 import BackButton from "@/components/BackButton";
-import { listRoutines, type Routine } from "@/lib/api/routines";
+import { listRoutines, type GygRoutine } from "@/lib/api/geology-geophysics";
 
 const routineIcons: Record<string, React.ComponentType<{ className?: string }>> = {
   addfaultname: FileEdit,
@@ -33,13 +33,13 @@ export default function RoutinesPage() {
   const accessToken = (session as { accessToken?: string } | null)?.accessToken ?? null;
   const apiOptions = { accessToken };
 
-  const [routines, setRoutines] = useState<Routine[]>([]);
+  const [routines, setRoutines] = useState<GygRoutine[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     async function load() {
       try {
-        const data = await listRoutines(apiOptions);
+        const data = await listRoutines(apiOptions, "geology_geophysics");
         setRoutines(data);
       } catch (e) {
         console.error("Failed to load routines:", e);
@@ -65,9 +65,9 @@ export default function RoutinesPage() {
         <div className="flex items-center gap-3">
           <BackButton />
           <div>
-            <h1 className="text-2xl font-semibold text-slate-800">Routines</h1>
+            <h1 className="text-2xl font-semibold text-slate-800">Geology &amp; Geophysics Routines</h1>
             <p className="mt-1 text-sm text-slate-500">
-              Browse and execute operational routines
+              Browse and execute operational routines for Geology &amp; Geophysics
             </p>
           </div>
         </div>
@@ -97,11 +97,11 @@ export default function RoutinesPage() {
                 key={r.id}
                 className="group relative overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm transition-all hover:border-slate-300 hover:shadow-md"
               >
-                <div className={`h-1.5 bg-gradient-to-r ${gradient}`} />
+                <div className={`h-1.5 bg-linear-to-r ${gradient}`} />
                 <div className="p-5">
                   <div className="flex items-start justify-between">
-                    <div
-                      className={`flex h-11 w-11 items-center justify-center rounded-lg bg-gradient-to-br ${gradient} text-white shadow-sm`}
+                      <div
+                      className={`flex h-11 w-11 items-center justify-center rounded-lg bg-linear-to-br ${gradient} text-white shadow-sm`}
                     >
                       <Icon className="h-5 w-5" />
                     </div>
@@ -125,7 +125,7 @@ export default function RoutinesPage() {
                     <code className="truncate text-xs text-slate-500">{r.script}</code>
                   </div>
                   <Link
-                    href={`/routines/${r.slug}`}
+                    href={`/gyg/${r.slug}`}
                     className="mt-4 flex items-center justify-center gap-2 rounded-lg bg-slate-900 px-4 py-2.5 text-sm font-medium text-white transition hover:bg-slate-800"
                   >
                     <Play className="h-4 w-4" />
