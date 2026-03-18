@@ -34,7 +34,7 @@ export const navigation: (NavItem | NavGroup)[] = [
     label: "Geology & Geophysics",
     icon: Layers,
     children: [
-      { label: "Routines", href: "/routines", icon: Play },
+      { label: "Geology & Geophysics", href: "/gyg", icon: Layers },
       { label: "Jobs", href: "/jobs", icon: Activity },
       { label: "Settings", href: "/settings", icon: Settings },
     ],

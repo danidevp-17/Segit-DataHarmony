@@ -2,7 +2,7 @@
 from uuid import UUID
 from sqlalchemy.orm import Session
 
-from modules.data_quality.models import AppScript, AppApplication, AppDocument, MODULE_DATA_QUALITY
+from modules.data_quality.models import AppScript, AppApplication, AppDocument, MODULE_DATA_QUALITY, MODULE_GEOLOGY_GEOPHYSICS  # noqa: F401
 
 
 # Scripts
@@ -57,8 +57,8 @@ def delete_application(db: Session, a: AppApplication) -> None:
 
 
 # Documents
-def get_all_documents(db: Session):
-    return db.query(AppDocument).order_by(AppDocument.title).all()
+def get_all_documents(db: Session, module: str = MODULE_DATA_QUALITY):
+    return db.query(AppDocument).filter(AppDocument.module == module).order_by(AppDocument.title).all()
 
 
 def create_document(db: Session, **kwargs) -> AppDocument:
