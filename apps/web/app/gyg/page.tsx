@@ -1,8 +1,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { useSession } from "next-auth/react";
-import { Loader2, Activity, Play } from "lucide-react";
+import { Loader2, Activity, Play, ArrowRight } from "lucide-react";
 import BackButton from "@/components/BackButton";
 import {
   listRoutines,
@@ -14,7 +15,10 @@ import {
   type GygApplication,
   type GygDocument,
 } from "@/lib/api/geology-geophysics";
+import RoutineCard from "@/components/routines/RoutineCard";
 import GygTabs from "./GygTabs";
+
+const LANDING_ROUTINES_LIMIT = 4;
 
 export default function GeologyGeophysicsPage() {
   const { data: session } = useSession();
@@ -49,10 +53,12 @@ export default function GeologyGeophysicsPage() {
     load();
   }, [accessToken]);
 
+  const landingRoutines = routines.slice(0, LANDING_ROUTINES_LIMIT);
+
   if (loading) {
     return (
       <div className="flex flex-col items-center justify-center py-20">
-        <Loader2 className="h-8 w-8 text-cyan-600 animate-spin" />
+        <Loader2 className="h-8 w-8 animate-spin text-cyan-600" aria-hidden />
         <p className="mt-3 text-sm text-slate-500">Cargando Geology &amp; Geophysics…</p>
       </div>
     );
@@ -65,30 +71,37 @@ export default function GeologyGeophysicsPage() {
         <div>
           <h1 className="text-2xl font-semibold text-slate-800">Geology &amp; Geophysics</h1>
           <p className="mt-1 text-sm text-slate-500">
-            Rutinas operacionales, scripts, aplicaciones y documentación para Geology &amp; Geophysics.
+            Rutinas operacionales, scripts, aplicaciones y documentación para Geology &amp;
+            Geophysics.
           </p>
         </div>
       </div>
 
-      {/* Routines summary */}
+      {/* Routines summary — landing: 4–6 cards + Ver todas */}
       <section className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
-        <div className="flex items-center justify-between mb-4">
+        <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
           <div className="flex items-center gap-2">
-            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-linear-to-br from-cyan-500 to-teal-600 text-white">
-              <Play className="h-5 w-5" />
+            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-gradient-to-br from-cyan-500 to-teal-600 text-white">
+              <Play className="h-5 w-5" aria-hidden />
             </div>
             <div>
-              <h2 className="text-sm font-semibold text-slate-800">Operational routines</h2>
+              <h2 className="text-sm font-semibold text-slate-800">Rutinas ejecutables</h2>
               <p className="text-xs text-slate-500">
                 Catálogo de rutinas ejecutables para Geology &amp; Geophysics.
               </p>
             </div>
           </div>
-          <div className="flex items-center gap-2 text-xs text-slate-500">
-            <Activity className="h-4 w-4" />
-            <span>
-              <span className="font-semibold text-slate-700">{routines.length}</span> rutinas disponibles
-            </span>
+          <div className="flex items-center gap-3">
+            <Link
+              href="/gyg/routines"
+              className="flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3.5 py-2 text-sm font-medium text-slate-600 transition hover:bg-slate-50 hover:border-slate-300 focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:ring-offset-2"
+              aria-label={`${routines.length} rutinas disponibles — Ver catálogo`}
+            >
+              <Activity className="h-4 w-4 text-slate-400" aria-hidden />
+              <span>
+                <span className="font-semibold text-slate-700">{routines.length}</span> rutinas disponibles
+              </span>
+            </Link>
           </div>
         </div>
         {routines.length === 0 ? (
@@ -97,24 +110,8 @@ export default function GeologyGeophysicsPage() {
           </p>
         ) : (
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {routines.map((r) => (
-              <div
-                key={r.id}
-                className="group rounded-lg border border-slate-200 bg-slate-50/60 px-4 py-3 text-sm text-slate-700 hover:bg-slate-50 hover:border-slate-300 transition"
-              >
-                <div className="flex items-center justify-between gap-2">
-                  <div>
-                    <p className="font-semibold text-slate-800 line-clamp-1">{r.name}</p>
-                    <p className="mt-0.5 text-xs text-slate-500 line-clamp-2">{r.description}</p>
-                  </div>
-                  <a
-                    href={`/gyg/${r.slug}`}
-                    className="inline-flex items-center rounded-full bg-slate-900 px-3 py-1 text-[11px] font-medium text-white hover:bg-slate-800 transition"
-                  >
-                    Run
-                  </a>
-                </div>
-              </div>
+            {landingRoutines.map((r) => (
+              <RoutineCard key={r.id} routine={r} compact />
             ))}
           </div>
         )}
