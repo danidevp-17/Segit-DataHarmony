@@ -43,3 +43,22 @@ export async function getJob(
 ): Promise<JobResponse> {
   return apiGet<JobResponse>(`/api/v1/jobs/${id}`, options);
 }
+
+export async function listJobsApi(
+  options?: ApiClientOptions,
+  limit = 100
+): Promise<JobResponse[]> {
+  return apiGet<JobResponse[]>(`/api/v1/jobs?limit=${limit}`, options);
+}
+
+export interface JobLogsResponse {
+  stdout: string;
+  stderr: string;
+}
+
+export async function getJobLogs(
+  id: string,
+  options?: ApiClientOptions
+): Promise<JobLogsResponse> {
+  return apiGet<JobLogsResponse>(`/api/v1/jobs/${id}/logs`, options);
+}

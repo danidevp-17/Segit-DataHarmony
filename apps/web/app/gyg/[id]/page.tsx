@@ -23,6 +23,7 @@ import {
   type DatasourceOption,
 } from "@/lib/api/geology-geophysics";
 import { createJob } from "@/lib/api/jobs";
+import RoutineVolumePathExecution from "@/components/routines/RoutineVolumePathExecution";
 
 export default function GygRoutineDetailPage() {
   const params = useParams();
@@ -173,6 +174,15 @@ export default function GygRoutineDetailPage() {
           </p>
         </div>
       </div>
+    );
+  }
+
+  if (routine.executionProfile === "volume_path") {
+    return (
+      <RoutineVolumePathExecution
+        routine={routine}
+        accessToken={accessToken}
+      />
     );
   }
 
