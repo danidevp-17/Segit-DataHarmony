@@ -769,7 +769,7 @@ function DocListView({
                         <Eye className="h-4 w-4" />
                       </button>
                     )}
-                    {doc.type === "link" && (
+                    {doc.type === "link" && doc.url && (
                       <a
                         href={doc.url}
                         target="_blank"
