@@ -26,7 +26,7 @@ Cada dominio es un paquete independiente bajo `modules/`:
 
 - `data_sources/` — Conexiones a BD (PostgreSQL, SQL Server, Oracle); CRUD y test de conexión
 - `data_quality/` — Scripts, aplicaciones, documentos, archivos
-- `routines/` — Catálogo de rutinas, ejecución de jobs. `execution_mode=subprocess` ejecuta script en disco vía Celery; `fallas_volume_split` delega en `FallasSplitService` (lectura/escritura en volumen). Ver [docs/Specs/gyg-fallas-split.md](./Specs/gyg-fallas-split.md).
+- `routines/` — Catálogo de rutinas, ejecución de jobs. `execution_mode=subprocess` ejecuta script en disco vía Celery; `fallas_volume_split` delega en `FallasSplitService` (lectura/escritura en volumen). Ver [docs/Specs/gyg-fallas-split.md](./Specs/gyg-fallas-split.md) y [docs/FLOW_RUN_ROUTINE.md](./FLOW_RUN_ROUTINE.md) para el flujo Run routine → fallas-split.
 - `cartography/` — Proyectos, cultural info
 - `gg/` — Geology & Geophysics
 - `production/` — Producción

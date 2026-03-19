@@ -352,6 +352,7 @@ docker compose -f infra/compose/docker-compose.yml down -v
 ## Documentación relevante
 
 - [Arquitectura](docs/ARCHITECTURE.md)
+- [Flujo Run routine](docs/FLOW_RUN_ROUTINE.md) — Trace completo desde clic hasta guardado en volumen
 - Sprints: [01](docs/SPRINT_01.md) · [02](docs/SPRINT_02.md) · [03](docs/SPRINT_03.md) · [04](docs/SPRINT_04.md) · [05](docs/SPRINT_05.md) · [06](docs/SPRINT_06.md) · [07](docs/SPRINT_07.md) · [08](docs/SPRINT_08.md)
 - Specs de features: [docs/Specs/](docs/Specs/) (ej. implementación de Volumes)
 - Seguimientos semanales: [docs/Seguimiento_*.md](docs/)
