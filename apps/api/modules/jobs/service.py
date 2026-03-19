@@ -15,6 +15,7 @@ def create_job_from_routine(db: Session, body: JobCreate) -> JobResponse:
         "routineId": body.routineId,
         "params": body.params,
         "datasourceId": body.datasourceId,
+        "volumeId": body.volumeId,
     }
     job = create_job(
         db,
