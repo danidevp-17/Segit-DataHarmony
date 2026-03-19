@@ -54,6 +54,9 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   },
   callbacks: {
     jwt({ token, account, user }) {
+      if (account?.expires_at) {
+        token.accessTokenExpiresAt = account.expires_at * 1000;
+      }
       // El id_token tiene aud=client_id (validable por FastAPI).
       // El access_token es para Graph API (aud=graph.microsoft.com) y falla la validación del backend.
       if (account?.id_token) {
@@ -66,6 +69,13 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         token.email = user.email;
         token.name = user.name;
       }
+      if (
+        typeof token.accessTokenExpiresAt === "number" &&
+        Date.now() >= token.accessTokenExpiresAt
+      ) {
+        delete token.accessToken;
+        token.authError = "AccessTokenExpired";
+      }
       return token;
     },
     session({ session, token }) {
@@ -73,13 +83,22 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         session.user.id = token.id as string;
       }
       (session as SessionWithToken).accessToken = token.accessToken as string | undefined;
+      (session as SessionWithToken).accessTokenExpiresAt =
+        typeof token.accessTokenExpiresAt === "number" ? token.accessTokenExpiresAt : undefined;
+      (session as SessionWithToken).authError = token.authError as string | undefined;
       return session;
     },
     authorized({ auth: authResult, request }) {
       const { pathname } = request.nextUrl;
       const isLoginPage = pathname === "/login";
       if (isLoginPage) return true;
-      if (authResult) return true;
+      if (authResult) {
+        const accessTokenExpiresAt = (authResult as SessionWithToken).accessTokenExpiresAt;
+        if (typeof accessTokenExpiresAt === "number" && Date.now() >= accessTokenExpiresAt) {
+          return false;
+        }
+        return true;
+      }
       return false;
     },
   },
@@ -92,6 +111,8 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
 
 export type SessionWithToken = {
   accessToken?: string;
+  accessTokenExpiresAt?: number;
+  authError?: string;
   user?: { id?: string; name?: string | null; email?: string | null; image?: string | null };
   expires?: string;
 };

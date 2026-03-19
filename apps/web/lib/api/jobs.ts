@@ -3,7 +3,7 @@
  * createJob usa el proxy Next.js /api/jobs (same-origin, sesión).
  * getJob llama a FastAPI directo con token.
  */
-import { apiGet, type ApiClientOptions } from "./client";
+import { apiGet, handleUnauthorizedRedirect, type ApiClientOptions } from "./client";
 
 export interface JobResponse {
   id: string;
@@ -28,6 +28,10 @@ export async function createJob(
     method: "POST",
     body: formData,
   });
+  if (res.status === 401) {
+    handleUnauthorizedRedirect();
+    throw new Error("Sesión expirada o no autorizada");
+  }
   if (!res.ok) {
     const data = await res.json().catch(() => ({}));
     throw new Error(

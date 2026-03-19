@@ -10,15 +10,42 @@ export type ApiClientOptions = {
   timeout?: number;
 };
 
+let isRedirectingToLogin = false;
+
+export class ApiUnauthorizedError extends Error {
+  constructor(message = "Sesión expirada o no autorizada") {
+    super(message);
+    this.name = "ApiUnauthorizedError";
+  }
+}
+
+export function handleUnauthorizedRedirect() {
+  if (typeof window === "undefined" || isRedirectingToLogin) return;
+  isRedirectingToLogin = true;
+  window.location.assign("/login");
+}
+
 async function fetchWithAuth(
   path: string,
-  options: RequestInit & { accessToken?: string | null; timeout?: number } = {}
+  options: RequestInit & {
+    accessToken?: string | null;
+    timeout?: number;
+    skipJsonContentType?: boolean;
+  } = {}
 ): Promise<Response> {
-  const { accessToken, timeout = 10000, headers: customHeaders, ...init } = options;
+  const {
+    accessToken,
+    timeout = 10000,
+    headers: customHeaders,
+    skipJsonContentType = false,
+    ...init
+  } = options;
   const headers: Record<string, string> = {
-    "Content-Type": "application/json",
     ...(customHeaders as Record<string, string>),
   };
+  if (!skipJsonContentType) {
+    headers["Content-Type"] = "application/json";
+  }
   if (accessToken) {
     headers["Authorization"] = `Bearer ${accessToken}`;
   }
@@ -32,6 +59,10 @@ async function fetchWithAuth(
     signal: controller.signal,
   });
   clearTimeout(id);
+  if (res.status === 401) {
+    handleUnauthorizedRedirect();
+    throw new ApiUnauthorizedError();
+  }
   return res;
 }
 
@@ -135,16 +166,13 @@ export async function apiPostFormData<T = unknown>(
   formData: FormData,
   options?: ApiClientOptions
 ): Promise<T> {
-  const headers: Record<string, string> = {
-    ...(options?.headers as Record<string, string>),
-  };
-  if (options?.accessToken) {
-    headers["Authorization"] = `Bearer ${options.accessToken}`;
-  }
-  const res = await fetch(`${getApiBaseUrl()}${path}`, {
+  const res = await fetchWithAuth(path, {
     method: "POST",
     body: formData,
-    headers,
+    accessToken: options?.accessToken,
+    headers: options?.headers,
+    timeout: options?.timeout,
+    skipJsonContentType: true,
   });
   if (!res.ok) {
     const text = await res.text();
