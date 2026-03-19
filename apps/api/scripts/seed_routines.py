@@ -16,16 +16,22 @@ from core.database import SessionLocal
 from modules.routines.repository import create_routine, get_routine_by_slug
 
 
-# Ruta al catalog: repo/apps/web/data/catalog.json o repo/web/data/catalog.json
+# Catálogo: routines/catalog.json (raíz repo), o apps/web/data/catalog.json
 _REPO = Path(__file__).resolve().parent.parent.parent
-CATALOG_PATH = _REPO / "apps" / "web" / "data" / "catalog.json"
+CATALOG_ROOT = _REPO / "routines" / "catalog.json"
+CATALOG_WEB = _REPO / "apps" / "web" / "data" / "catalog.json"
+CATALOG_ALT = _REPO / "web" / "data" / "catalog.json"
 
 
 def main():
-    alt_path = _REPO / "web" / "data" / "catalog.json"
-    path = CATALOG_PATH if CATALOG_PATH.exists() else alt_path
-    if not path.exists():
-        print(f"Catalog not found. Tried: {CATALOG_PATH}, {alt_path}")
+    if CATALOG_ROOT.exists():
+        path = CATALOG_ROOT
+    elif CATALOG_WEB.exists():
+        path = CATALOG_WEB
+    elif CATALOG_ALT.exists():
+        path = CATALOG_ALT
+    else:
+        print(f"Catalog not found. Tried: {CATALOG_ROOT}, {CATALOG_WEB}, {CATALOG_ALT}")
         return
 
     with open(path, encoding="utf-8") as f:
@@ -55,8 +61,22 @@ def main():
             file_inputs=r.get("fileInputs", r.get("file_inputs", [])),
             needs_datasource=r.get("needsDatasource", r.get("needs_datasource", False)),
             module=r.get("module", "geology_geophysics"),
+            execution_mode=r.get("executionMode", r.get("execution_mode", "subprocess")),
         )
         created += 1
+
+    # Sincronizar execution_mode / script desde catálogo si la fila ya existía
+    for r in routines:
+        slug = r.get("id") or r.get("slug")
+        if not slug:
+            continue
+        row = get_routine_by_slug(db, slug)
+        em = r.get("executionMode") or r.get("execution_mode")
+        if row and em:
+            if getattr(row, "execution_mode", None) != em:
+                row.execution_mode = em
+                row.script = r.get("script", row.script)
+    db.commit()
 
     db.close()
     print(f"Created {created} routines, skipped {skipped} (already exist)")

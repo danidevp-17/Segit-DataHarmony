@@ -42,6 +42,17 @@
         "script": "scripts/renfiles2.sh",
         "params": [],
         "fileInputs": [{ "name": "files", "label": "Files to rename", "accept": ".tif,.tiff", "multiple": true }]
+      },
+      {
+        "id": "fallas-split",
+        "name": "Fallas split (fallas.dat)",
+        "description": "Reads fallas.dat on a registered volume, splits by Fault Name into <Fault Name>.dat (legacy awk-compatible format).",
+        "script": "internal://fallas_volume_split",
+        "params": [],
+        "fileInputs": [],
+        "needsDatasource": false,
+        "executionMode": "fallas_volume_split",
+        "module": "geology_geophysics"
       }
     ]
   }
