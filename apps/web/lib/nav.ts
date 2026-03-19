@@ -1,6 +1,5 @@
 import {
   Home,
-  Play,
   Activity,
   Settings,
   Factory,
@@ -35,7 +34,6 @@ export const navigation: (NavItem | NavGroup)[] = [
     icon: Layers,
     children: [
       { label: "Geology & Geophysics", href: "/gyg", icon: Layers },
-      { label: "Jobs", href: "/jobs", icon: Activity },
       { label: "Settings", href: "/settings", icon: Settings },
     ],
   },
@@ -100,6 +98,14 @@ export const navigation: (NavItem | NavGroup)[] = [
       { label: "Authentication", href: "/admin/auth", icon: Shield },
       { label: "Datasources", href: "/admin/datasources", icon: Shield },
       { label: "Access Policies", href: "/admin/policies", icon: Shield },
+    ],
+  },
+  {
+    id: "jobs",
+    label: "Jobs",
+    icon: Activity,
+    children: [
+      { label: "Jobs", href: "/jobs", icon: Activity },
     ],
   },
 ];

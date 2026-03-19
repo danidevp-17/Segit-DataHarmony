@@ -107,19 +107,15 @@ def _sanitize_path(path: str, share_path: str) -> str:
     Normaliza el path y verifica que no escape del share_path del volumen.
     Previene ataques de path traversal (../../etc/passwd, etc.).
     """
-    # Normalizar: eliminar dobles slashes, resolver ..
-    normalized = posixpath.normpath("/" + path.lstrip("/"))
+    from modules.volumes.path_sanitize import InvalidVolumePathError, sanitize_path_under_share
 
-    # El share_path base también debe estar normalizado
-    base = posixpath.normpath("/" + share_path.lstrip("/"))
-
-    # El path debe empezar por el share_path
-    if not (normalized == base or normalized.startswith(base.rstrip("/") + "/")):
+    try:
+        return sanitize_path_under_share(path, share_path)
+    except InvalidVolumePathError as e:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"Invalid path: '{path}' is outside the allowed root '{share_path}'",
-        )
-    return normalized
+            detail=str(e),
+        ) from e
 
 
 def _get_active_volume(db: Session, volume_id: UUID) -> AppVolume:

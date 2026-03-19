@@ -12,6 +12,7 @@ class JobCreate(BaseModel):
     moduleId: str = "geology_geophysics"
     params: dict[str, Any] = Field(default_factory=dict)
     datasourceId: str | None = None
+    volumeId: str | None = None
 
 
 class JobLogsResponse(BaseModel):

@@ -44,6 +44,8 @@ export interface GygRoutine {
   fileInputs: FileInput[];
   needsDatasource: boolean;
   module: string;
+  /** volume_path = split layout with volume + directory explorer */
+  executionProfile?: "default" | "volume_path";
 }
 
 export interface DatasourceOption {

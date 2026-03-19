@@ -31,9 +31,12 @@ class RoutineResponse(BaseModel):
     fileInputs: list[dict[str, Any]] = Field(default_factory=list)
     needsDatasource: bool = False
     module: str = "geology_geophysics"
+    executionProfile: str = "default"
 
     @classmethod
     def from_model(cls, r: "Routine") -> "RoutineResponse":
+        mode = getattr(r, "execution_mode", None) or "subprocess"
+        profile = "volume_path" if mode == "fallas_volume_split" else "default"
         return cls(
             id=r.id,
             slug=r.slug,
@@ -44,6 +47,7 @@ class RoutineResponse(BaseModel):
             fileInputs=r.file_inputs or [],
             needsDatasource=r.needs_datasource,
             module=r.module or "geology_geophysics",
+            executionProfile=profile,
         )
 
 
