@@ -50,6 +50,7 @@ function getModuleCards(): NavGroup[] {
 
 function getModuleDescription(label: string): string {
   const descriptions: Record<string, string> = {
+    Jobs: "Historial y detalle de jobs de rutinas (API / Celery)",
     "Geology & Geophysics": "Run routines, monitor jobs, and configure system settings",
     "Production": "Manage production-related operations and workflows",
     "Drilling": "Handle drilling operations and access management",
