@@ -27,3 +27,5 @@ class Routine(Base, UUIDMixin, TimestampMixin):
     needs_datasource = Column(Boolean, default=False, nullable=False)
     # Módulo asociado (ej: geology_geophysics) para filtrado y políticas
     module = Column(String(64), default="geology_geophysics", nullable=False, index=True)
+    # subprocess = script en disco; fallas_volume_split = servicio Python (fallas_split) + volumen
+    execution_mode = Column(String(64), default="subprocess", nullable=False)

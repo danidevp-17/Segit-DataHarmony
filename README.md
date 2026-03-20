@@ -69,11 +69,13 @@ Ejecutar dentro del contenedor API:
 # Seed de módulos y secciones de navegación (registry)
 docker compose -f infra/compose/docker-compose.yml exec api python scripts/seed_registry.py
 
-# Seed de routines (desde apps/web/data/catalog.json)
+# Seed de routines (desde routines/catalog.json en la raíz del repo)
 docker compose -f infra/compose/docker-compose.yml exec api python scripts/seed_routines.py
 ```
 
-> **Routines:** Añade rutinas en `apps/web/data/catalog.json` y luego ejecuta `seed_routines.py`.
+> **Routines:** La rutina **fallas-split** se inserta/actualiza con la migración Alembic **010** (tabla `routines`). El script `seed_routines.py` es opcional si usas `routines/catalog.json`. El worker **Celery** debe alcanzar el mismo storage que la API (`ENCRYPTION_KEY`). Ver [docs/Specs/gyg-fallas-split.md](docs/Specs/gyg-fallas-split.md).
+
+> **Jobs desde la web:** POST a `/api/jobs` (Next.js BFF) reenvía a la API con el token de sesión.
 
 ### Ver logs
 
@@ -118,7 +120,8 @@ cd apps/api
 pip install -r requirements.txt
 alembic upgrade head
 python scripts/seed_registry.py
-python scripts/seed_routines.py   # opcional
+python scripts/seed_routines.py   # opcional (incluye fallas-split)
+# Tests: pytest tests/test_fallas_split.py -v
 uvicorn main:app --reload
 ```
 

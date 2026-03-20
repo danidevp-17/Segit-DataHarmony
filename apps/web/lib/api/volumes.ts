@@ -119,8 +119,12 @@ export interface UploadResponse {
 // Gestión de volúmenes
 // ---------------------------------------------------------------------------
 
-export async function listVolumes(options?: ApiClientOptions): Promise<AppVolume[]> {
-  return apiGet<AppVolume[]>(BASE, options);
+export async function listVolumes(
+  options?: ApiClientOptions,
+  module?: string
+): Promise<AppVolume[]> {
+  const qs = module ? `?module=${encodeURIComponent(module)}` : "";
+  return apiGet<AppVolume[]>(`${BASE}${qs}`, options);
 }
 
 export async function getVolume(id: string, options?: ApiClientOptions): Promise<AppVolume> {

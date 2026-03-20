@@ -37,6 +37,7 @@ async def post_job(
     moduleId: str = Form("geology_geophysics"),
     params: str = Form("{}"),
     datasourceId: str | None = Form(None),
+    volumeId: str | None = Form(None),
     _user=_user_dep(),
 ):
     """
@@ -49,6 +50,7 @@ async def post_job(
         moduleId=moduleId,
         params=_parse_params(params),
         datasourceId=datasourceId if datasourceId else None,
+        volumeId=volumeId.strip() if volumeId and volumeId.strip() else None,
     )
     return create_job_from_routine(db, body)
 

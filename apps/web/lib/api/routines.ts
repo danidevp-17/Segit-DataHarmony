@@ -1,6 +1,6 @@
-/**
- * Cliente API para Routines (FastAPI).
- */
+// Legacy client for /api/v1/routines (kept for backward compatibility).
+// New code should use `lib/api/geology-geophysics.ts`.
+
 import { apiGet, type ApiClientOptions } from "./client";
 
 const BASE = "/api/v1/routines";

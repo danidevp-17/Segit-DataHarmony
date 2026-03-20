@@ -90,7 +90,7 @@ def delete_application_svc(db: Session, id: UUID) -> bool:
 
 # Documents
 def list_documents(db: Session) -> list[DQDocumentResponse]:
-    return [_doc_to_response(d) for d in get_all_documents(db)]
+    return [_doc_to_response(d) for d in get_all_documents(db, module=MODULE_DATA_QUALITY)]
 
 
 def create_document_svc(db: Session, body: DQDocumentCreate) -> DQDocumentResponse:
